@@ -34,6 +34,7 @@ import com.evodart.glyphdial.ui.components.scrollbar.AnimatedAlphabetScrollbar
 import com.evodart.glyphdial.ui.theme.NothingColors
 import com.evodart.glyphdial.ui.theme.NothingTextStyles
 import kotlinx.coroutines.launch
+import com.evodart.glyphdial.ui.components.search.NothingSearchBar
 
 /**
  * Contacts screen with search and alphabet scrollbar
@@ -182,7 +183,7 @@ fun ContactsScreen(
     }
 }
 
-import com.evodart.glyphdial.ui.components.search.NothingSearchBar
+
 
 @Composable
 private fun SectionHeader(letter: String) {

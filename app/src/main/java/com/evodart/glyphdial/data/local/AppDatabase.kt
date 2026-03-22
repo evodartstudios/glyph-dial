@@ -10,7 +10,7 @@ import androidx.room.RoomDatabase
  * - Phase 4: CallNote, CallRecording, ScheduledCall
  */
 @Database(
-    entities = [],
+    entities = [com.evodart.glyphdial.data.local.entity.DummyEntity::class],
     version = 1,
     exportSchema = false
 )

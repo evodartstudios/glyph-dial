@@ -1,5 +1,6 @@
 package com.evodart.glyphdial.ui.screens.recents
 
+import com.evodart.glyphdial.ui.components.search.NothingSearchBar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -418,7 +419,7 @@ private fun ExpandedCallItem(
 
 // ============ SHARED COMPONENTS ============
 
-import com.evodart.glyphdial.ui.components.search.NothingSearchBar
+
 
 @Composable
 private fun DateHeader(date: LocalDate) {
