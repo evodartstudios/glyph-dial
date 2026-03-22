@@ -4,46 +4,46 @@ plan: 2
 wave: 1
 ---
 
-# Plan 2.2: Component Polish & Theming
+# Plan 2.2: DotMatrix Interaction System & Dialpad Refactor
 
 ## Objective
-Establish reusable, pixel-perfect UI components and wire up full Light Theme support.
+Overhaul the complicated full-screen DotMatrix animations into a highly performant, reusable interaction system (like a custom ripple) and apply it to replace the "bad rings" on the Dialpad.
 
 ## Context
-- .gsd/SPEC.md
-- app/src/main/java/com/evodart/glyphdial/ui/theme/Theme.kt
-- app/src/main/java/com/evodart/glyphdial/ui/components/
+- .gsd/DECISIONS.md (Overhaul dot matrix, fix dialpad rings)
+- app/src/main/java/com/evodart/glyphdial/ui/components/animation/DotMatrixAnimations.kt
+- app/src/main/java/com/evodart/glyphdial/ui/screens/dialpad/DialPadScreen.kt
+- app/src/main/java/com/evodart/glyphdial/ui/components/dialpad/DialPadButton.kt
 
 ## Tasks
 
 <task type="auto">
-  <name>Implement Light Theme Support</name>
+  <name>Create DotMatrix Indication (Custom Ripple)</name>
   <files>
-    app/src/main/java/com/evodart/glyphdial/ui/theme/Theme.kt
-    app/src/main/java/com/evodart/glyphdial/ui/theme/Color.kt
+    app/src/main/java/com/evodart/glyphdial/ui/components/animation/DotMatrixRipple.kt
+    app/src/main/java/com/evodart/glyphdial/ui/components/animation/DotMatrixAnimations.kt
   </files>
   <action>
-    Update `GlyphDialTheme` to handle `isSystemInDarkTheme()`. Map dark colors (e.g., PureBlack -> PureWhite, SilverGray -> DarkGray) to create a stark, high-contrast Nothing-style light theme. Ensure LocalAccentColor works seamlessly across both.
+    - Build a custom `Indication` (e.g., `DotMatrixRippleNodeFactory`) that draws a miniature, performant dot-matrix explosion/implosion on press coordinates.
+    - This replaces the Android standard material ripple with a premium Nothing-style dot explosion that is calculated efficiently (caching coordinates).
+    - Incorporate layered haptic feedback (tick on press down, light click on release).
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>Themes switch based on system setting seamlessly.</done>
+  <done>A reusable `Modifier.dotMatrixClickable()` or standard Compose `Indication` is ready to use.</done>
 </task>
 
 <task type="auto">
-  <name>Build Premium Component Library</name>
-  <files>
-    app/src/main/java/com/evodart/glyphdial/ui/components/buttons/NothingButtons.kt
-    app/src/main/java/com/evodart/glyphdial/ui/components/cards/NothingCards.kt
-  </files>
+  <name>Overhaul Dialpad Buttons</name>
+  <files>app/src/main/java/com/evodart/glyphdial/ui/components/dialpad/DialPadButton.kt</files>
   <action>
-    Create reusable `NothingButton`, `NothingIconToggle`, and `NothingCard`.
-    - Apply the `nothingClickable` modifier from Plan 2.1 to these components.
-    - Standardize spacing, border widths (e.g., 1dp borders for outlined elements), and corner radiuses.
+    - Remove the existing generic rings and feedback from `DialPadButton`.
+    - Apply the new `DotMatrixRipple` indication.
+    - Refine the typography, spacing, and sizing of the Dialpad buttons so they perfectly echo the geometric Nothing aesthetic, scaling down slightly on press.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>Standardized components exist for buttons, toggles, and cards.</done>
+  <done>Dialpad buttons feature a premium, smooth Dot Matrix click reaction instead of generic rings.</done>
 </task>
 
 ## Success Criteria
-- [ ] Light theme properly inverts monochrome colors.
-- [ ] Reusable buttons and cards exist using the new interaction modifiers.
+- [ ] Dot matrix is used as an interactive, performant feedback layer.
+- [ ] Dialpad feels entirely custom and satisfying to type on.

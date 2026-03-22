@@ -4,44 +4,44 @@ plan: 1
 wave: 1
 ---
 
-# Plan 2.1: Micro-Animations & Haptics
+# Plan 2.1: Flawless Page Transitions & Pager Fix
 
 ## Objective
-Establish the foundational physical feel of the Nothing aesthetic by auditing heavy animations and introducing scalable micro-animations and haptic feedback.
+Fix the buggy, teleporting page swipe behavior and ensure butter-smooth navigation across the core app screens.
 
 ## Context
-- .gsd/SPEC.md
-- app/src/main/java/com/evodart/glyphdial/ui/components/animation/DotMatrixAnimations.kt
-- app/src/main/java/com/evodart/glyphdial/ui/theme/NothingMotion.kt
+- .gsd/DECISIONS.md (User constraint on teleporting page bug)
+- app/src/main/java/com/evodart/glyphdial/ui/components/pager/SwipeablePagePager.kt
+- app/src/main/java/com/evodart/glyphdial/MainActivity.kt
 
 ## Tasks
 
 <task type="auto">
-  <name>Audit and Optimize DotMatrix Animations</name>
-  <files>app/src/main/java/com/evodart/glyphdial/ui/components/animation/DotMatrixAnimations.kt</files>
+  <name>Rewrite SwipeablePagePager</name>
+  <files>
+    app/src/main/java/com/evodart/glyphdial/ui/components/pager/SwipeablePagePager.kt
+    app/src/main/java/com/evodart/glyphdial/MainActivity.kt
+  </files>
   <action>
-    Optimize the Canvas drawing in DotMatrix animations. Reduce the `dotCount` defaults for explosion/implosion. Introduce `graphicsLayer` for caching if applicable, or simplify the math (pre-calculate `sin`/`cos` arrays during initialization). Ensure default frame time drops.
+    - The current `SwipeablePagePager` has a bug where slow swipes cause the teleportation back to start/midway. This is likely due to bad custom gesture calculus.
+    - Rewrite `SwipeablePagePager` to use Compose Foundation's official `HorizontalPager` or a robust `AnchoredDraggable` setup that perfectly tracks finger velocity and respects boundaries without teleporting.
+    - Keep the existing `pagerState` API if possible, or refactor `MainActivity` to use `androidx.compose.foundation.pager.PagerState`.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>mathematical overhead is cached and animation parameters are tuned for performance</done>
+  <done>User can swipe slowly or quickly between pages without any visual teleportation or bugs.</done>
 </task>
 
 <task type="auto">
-  <name>Implement Micro-Animation and Haptic Modifiers</name>
-  <files>
-    app/src/main/java/com/evodart/glyphdial/ui/components/animation/InteractionModifiers.kt
-    app/src/main/java/com/evodart/glyphdial/ui/theme/NothingMotion.kt
-  </files>
+  <name>Premium Detail Screen Transitions</name>
+  <files>app/src/main/java/com/evodart/glyphdial/MainActivity.kt</files>
   <action>
-    Create a new file `InteractionModifiers.kt`. Implement a `Modifier.nothingClickable` that extends standard clickable to include:
-    1. A slight scale down to `0.95f` using `animateFloatAsState` on press.
-    2. Integrated `HapticFeedback` (light tick on press).
-    Expose these interaction tokens in `NothingMotion`.
+    - In `MainActivity.kt`, the `ContactDetailScreen` and `CallDetailScreen` currently use basic `slideInHorizontally` overlays.
+    - Upgrade these to perform a combination of a subtle scale (0.95f -> 1.0f), a fade, and an emphasized slide, creating a physical "card rising" or "shared element" feel.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>A reusable Modifier is available for premium button presses with haptics.</done>
+  <done>Overlays transition in and out with high-end, smooth physics instead of basic linear slides.</done>
 </task>
 
 ## Success Criteria
-- [ ] DotMatrix animations are optimized.
-- [ ] `nothingClickable` modifier provides scale and haptic feedback.
+- [ ] No teleporting on slow edge swipes.
+- [ ] Detail screens animate luxuriously.
