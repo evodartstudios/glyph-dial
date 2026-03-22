@@ -2,16 +2,19 @@
 
 ## Last Session Summary
 
-Codebase mapping complete (2026-03-22).
+Project initialized via `/new-project` on 2026-03-22.
 
-- 42 source files analyzed across 5 layers
-- 24 production dependencies audited (2 unused)
-- 14+ technical debt items identified
-- Architecture: single-module MVVM with Hilt DI, InCallService, ContentResolver repos
+### Completed
+- `/map` — Full codebase analysis (42 files, 5 layers, 14+ tech debt items)
+- `/new-project` — Deep questioning → SPEC → REQUIREMENTS → ROADMAP
 
-### Key Findings
-- Room DB declared but unused — opportunity for contact caching
-- Single ViewModel handles everything — needs splitting
-- N+1 query pattern in contact loading
-- minSdk 24 but java.time.Instant requires API 26+
-- No unit tests, no error handling, 10+ TODOs
+### Current Position
+- **Phase**: Not started (Phase 1: Foundation & Architecture Cleanup is next)
+- **Milestone**: v1.0 — Play Store Launch
+
+### Key Context
+- 39 requirements defined, ~8 already done from existing code
+- 5 phases planned: Foundation → Design → Core Dialer → Smart Features → Play Store
+- Critical fix needed: minSdk 24 → 26 (java.time.Instant crash)
+- Room DB: decide keep (for caching) or remove
+- DotMatrix animations: profile before deciding keep/remove
