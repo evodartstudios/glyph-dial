@@ -86,7 +86,7 @@ fun RecentsScreen(
     }
     
     Column(modifier = modifier.fillMaxSize()) {
-        SearchBar(
+        com.evodart.glyphdial.ui.components.search.NothingSearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
             placeholder = "Search recents",
@@ -418,67 +418,7 @@ private fun ExpandedCallItem(
 
 // ============ SHARED COMPONENTS ============
 
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    placeholder: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(NothingColors.SurfaceCard)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Search,
-            contentDescription = "Search",
-            tint = NothingColors.SilverGray,
-            modifier = Modifier.size(20.dp)
-        )
-        
-        Spacer(modifier = Modifier.width(12.dp))
-        
-        BasicTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = Modifier.weight(1f),
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = NothingColors.PureWhite
-            ),
-            cursorBrush = SolidColor(LocalAccentColor.current),
-            decorationBox = { innerTextField ->
-                if (query.isEmpty()) {
-                    Text(
-                        text = placeholder,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = NothingColors.SilverGray
-                    )
-                }
-                innerTextField()
-            }
-        )
-        
-        if (query.isNotEmpty()) {
-            IconButton(
-                onClick = { onQueryChange("") },
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Clear,
-                    contentDescription = "Clear",
-                    tint = NothingColors.SilverGray,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
-}
+import com.evodart.glyphdial.ui.components.search.NothingSearchBar
 
 @Composable
 private fun DateHeader(date: LocalDate) {

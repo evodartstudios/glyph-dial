@@ -10,13 +10,9 @@ import android.content.Intent
 class CallActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            ACTION_ANSWER -> GlyphDialCallService.answerCall()
-            ACTION_DECLINE -> GlyphDialCallService.rejectCall()
-            ACTION_HANG_UP -> GlyphDialCallService.endCall()
+            CallConstants.ACTION_ANSWER -> GlyphDialCallService.answerCall()
+            CallConstants.ACTION_DECLINE -> GlyphDialCallService.rejectCall()
+            CallConstants.ACTION_HANG_UP -> GlyphDialCallService.endCall()
         }
     }
 }
-
-private const val ACTION_ANSWER = "com.evodart.glyphdial.ACTION_ANSWER"
-private const val ACTION_DECLINE = "com.evodart.glyphdial.ACTION_DECLINE"
-private const val ACTION_HANG_UP = "com.evodart.glyphdial.ACTION_HANG_UP"

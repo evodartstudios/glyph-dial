@@ -22,6 +22,12 @@ import androidx.core.app.Person
 import androidx.core.graphics.drawable.IconCompat
 import com.evodart.glyphdial.InCallActivity
 import com.evodart.glyphdial.R
+import com.evodart.glyphdial.service.CallConstants.ACTION_ANSWER
+import com.evodart.glyphdial.service.CallConstants.ACTION_DECLINE
+import com.evodart.glyphdial.service.CallConstants.ACTION_HANG_UP
+import com.evodart.glyphdial.service.CallConstants.CHANNEL_ACTIVE
+import com.evodart.glyphdial.service.CallConstants.CHANNEL_INCOMING
+import com.evodart.glyphdial.service.CallConstants.NOTIFICATION_ID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -407,10 +413,3 @@ enum class CallState {
     DISCONNECTED,
     SELECT_PHONE_ACCOUNT
 }
-
-private const val CHANNEL_INCOMING = "glyph_dial_incoming"
-private const val CHANNEL_ACTIVE = "glyph_dial_active"
-private const val NOTIFICATION_ID = 1001
-private const val ACTION_ANSWER = "com.evodart.glyphdial.ACTION_ANSWER"
-private const val ACTION_DECLINE = "com.evodart.glyphdial.ACTION_DECLINE"
-private const val ACTION_HANG_UP = "com.evodart.glyphdial.ACTION_HANG_UP"
