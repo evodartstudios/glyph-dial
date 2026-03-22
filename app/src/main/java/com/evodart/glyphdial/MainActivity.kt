@@ -49,9 +49,11 @@ import com.evodart.glyphdial.ui.theme.GlyphDialTheme
 import com.evodart.glyphdial.ui.theme.LocalAccentColor
 import com.evodart.glyphdial.ui.theme.NothingColors
 import com.evodart.glyphdial.ui.theme.toColor
-import com.evodart.glyphdial.ui.viewmodel.MainViewModel
+import com.evodart.glyphdial.ui.viewmodel.CallLogViewModel
+import com.evodart.glyphdial.ui.viewmodel.ContactsViewModel
+import com.evodart.glyphdial.ui.viewmodel.DialerViewModel
+import com.evodart.glyphdial.ui.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -70,7 +72,7 @@ class MainActivity : ComponentActivity() {
             
             CompositionLocalProvider(LocalAccentColor provides accentColor.toColor()) {
                 GlyphDialTheme {
-                    GlyphDialContent(settingsDataStore = settingsDataStore)
+                    GlyphDialContent()
                 }
             }
         }
@@ -80,29 +82,35 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GlyphDialContent(
-    viewModel: MainViewModel = hiltViewModel(),
-    settingsDataStore: SettingsDataStore
+    contactsViewModel: ContactsViewModel = hiltViewModel(),
+    callLogViewModel: CallLogViewModel = hiltViewModel(),
+    dialerViewModel: DialerViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     
-    // Settings
-    val defaultStartPage by settingsDataStore.defaultStartPage.collectAsState(initial = "dial")
-    val scrollbarPosition by settingsDataStore.scrollbarPosition.collectAsState(initial = ScrollbarPosition.RIGHT)
-    val showRecommendations by settingsDataStore.showRecommendations.collectAsState(initial = true)
-    val accentColor by settingsDataStore.accentColor.collectAsState(initial = AccentColor.RED)
+    // Settings state
+    val defaultStartPage by settingsViewModel.defaultStartPage.collectAsState()
+    val scrollbarPosition by settingsViewModel.scrollbarPosition.collectAsState()
+    val showRecommendations by settingsViewModel.showRecommendations.collectAsState()
+    val accentColor by settingsViewModel.accentColor.collectAsState()
     
     // Pager state with default from settings
     val pagerState = rememberAppPagerState(defaultStartPage)
     
-    // Collect ViewModel state
-    val contacts by viewModel.contacts.collectAsState()
-    val contactsLoading by viewModel.contactsLoading.collectAsState()
-    val recentCalls by viewModel.recentCalls.collectAsState()
-    val callLogLoading by viewModel.callLogLoading.collectAsState()
-    val hasContactsPermission by viewModel.hasContactsPermission.collectAsState()
-    val hasCallLogPermission by viewModel.hasCallLogPermission.collectAsState()
-    val t9Suggestions by viewModel.t9Suggestions.collectAsState()
+    // Contact state
+    val contacts by contactsViewModel.contacts.collectAsState()
+    val contactsLoading by contactsViewModel.isLoading.collectAsState()
+    val hasContactsPermission by contactsViewModel.hasPermission.collectAsState()
+    
+    // CallLog state
+    val recentCalls by callLogViewModel.recentCalls.collectAsState()
+    val callLogLoading by callLogViewModel.isLoading.collectAsState()
+    val hasCallLogPermission by callLogViewModel.hasPermission.collectAsState()
+    
+    // Dialer state
+    val hasPhonePermission by dialerViewModel.hasPhonePermission.collectAsState()
+    val t9Suggestions by dialerViewModel.t9Suggestions.collectAsState()
     
     // Detail screen states
     var selectedContact by remember { mutableStateOf<Contact?>(null) }
@@ -111,7 +119,11 @@ fun GlyphDialContent(
     // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { viewModel.onPermissionsGranted() }
+    ) { 
+        contactsViewModel.checkPermission()
+        callLogViewModel.checkPermission()
+        dialerViewModel.checkPermission()
+    }
     
     // Default dialer launcher
     val defaultDialerLauncher = rememberLauncherForActivityResult(
@@ -129,14 +141,6 @@ fun GlyphDialContent(
         needed.add(Manifest.permission.CALL_PHONE)
         needed.add(Manifest.permission.READ_PHONE_STATE)
         if (needed.isNotEmpty()) permissionLauncher.launch(needed.toTypedArray())
-    }
-    
-    // Load data on permission grant
-    LaunchedEffect(hasContactsPermission) {
-        if (hasContactsPermission) viewModel.loadContacts()
-    }
-    LaunchedEffect(hasCallLogPermission) {
-        if (hasCallLogPermission) viewModel.loadRecentCalls()
     }
     
     val dualSimEnabled = false
@@ -189,7 +193,7 @@ fun GlyphDialContent(
                     dualSimEnabled = dualSimEnabled,
                     simPreference = simPreference,
                     t9Suggestions = t9Suggestions,
-                    onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                    onSearchQueryChange = { dialerViewModel.updateSearchQuery(it) },
                     modifier = Modifier.fillMaxSize()
                 )
                 "recents" -> {
@@ -240,7 +244,7 @@ fun GlyphDialContent(
                         )
                     } else {
                         FavoritesScreen(
-                            contacts = viewModel.getStarredContacts(),
+                            contacts = contactsViewModel.getStarredContacts(),
                             onContactClick = { contact -> selectedContact = contact },
                             onCallClick = { number -> makeCall(number) },
                             isLoading = contactsLoading
@@ -252,18 +256,10 @@ fun GlyphDialContent(
                     scrollbarPosition = scrollbarPosition,
                     showRecommendations = showRecommendations,
                     accentColor = accentColor,
-                    onDefaultStartPageChange = { page ->
-                        scope.launch { settingsDataStore.setDefaultStartPage(page) }
-                    },
-                    onScrollbarPositionChange = { pos ->
-                        scope.launch { settingsDataStore.setScrollbarPosition(pos) }
-                    },
-                    onShowRecommendationsChange = { show ->
-                        scope.launch { settingsDataStore.setShowRecommendations(show) }
-                    },
-                    onAccentColorChange = { color ->
-                        scope.launch { settingsDataStore.setAccentColor(color) }
-                    },
+                    onDefaultStartPageChange = { page -> settingsViewModel.setDefaultStartPage(page) },
+                    onScrollbarPositionChange = { pos -> settingsViewModel.setScrollbarPosition(pos) },
+                    onShowRecommendationsChange = { show -> settingsViewModel.setShowRecommendations(show) },
+                    onAccentColorChange = { color -> settingsViewModel.setAccentColor(color) },
                     onSetDefaultDialerClick = { requestDefaultDialer() }
                 )
             }
