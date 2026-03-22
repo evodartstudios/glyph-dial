@@ -9,9 +9,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import com.evodart.glyphdial.ui.components.animation.SwipeDotTransition
-import com.evodart.glyphdial.ui.components.animation.TransitionDirection
-import com.evodart.glyphdial.ui.theme.NothingColors
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -50,9 +47,6 @@ fun SwipeablePagePager(
                 content = { pageContent(route) }
             )
         }
-        
-        // Dot transition overlay
-        DotTransitionOverlay(pagerState)
     }
 }
 
@@ -73,27 +67,6 @@ private fun calculatePageOffset(pagerState: PagerState, page: Int): Float {
     return (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun DotTransitionOverlay(pagerState: PagerState) {
-    val scrollProgress = abs(pagerState.currentPageOffsetFraction)
-    
-    if (pagerState.isScrollInProgress && scrollProgress > 0.02f) {
-        val direction = if (pagerState.currentPageOffsetFraction > 0) {
-            TransitionDirection.RIGHT_TO_LEFT
-        } else {
-            TransitionDirection.LEFT_TO_RIGHT
-        }
-        
-        SwipeDotTransition(
-            progress = (scrollProgress * 1.5f).coerceAtMost(1f),
-            direction = direction,
-            color = NothingColors.NothingRed,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-}
-
 @Composable
 private fun PageItem(
     pageOffset: Float,
@@ -101,7 +74,7 @@ private fun PageItem(
 ) {
     val absOffset = abs(pageOffset).coerceIn(0f, 1f)
     val scale = 1f - (absOffset * 0.05f)
-    val alpha = 1f - (absOffset * 0.15f)
+    val alpha = 1f - (absOffset * 0.2f) // Slightly deeper fade for premium feel
     
     Box(
         modifier = Modifier

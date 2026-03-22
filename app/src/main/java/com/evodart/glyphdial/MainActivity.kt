@@ -44,6 +44,10 @@ import com.evodart.glyphdial.ui.screens.dialpad.DialPadScreen
 import com.evodart.glyphdial.ui.screens.favorites.FavoritesScreen
 import com.evodart.glyphdial.ui.screens.recents.CallDetailScreen
 import com.evodart.glyphdial.ui.screens.recents.RecentsScreen
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.tween
+import com.evodart.glyphdial.ui.theme.NothingMotion
 import com.evodart.glyphdial.ui.screens.settings.SettingsScreen
 import com.evodart.glyphdial.ui.theme.GlyphDialTheme
 import com.evodart.glyphdial.ui.theme.LocalAccentColor
@@ -274,8 +278,8 @@ fun GlyphDialContent(
         // Contact Detail Overlay
         AnimatedVisibility(
             visible = selectedContact != null,
-            enter = slideInHorizontally { it } + fadeIn(),
-            exit = slideOutHorizontally { it } + fadeOut()
+            enter = slideInHorizontally(animationSpec = tween(NothingMotion.CallAnimations.acceptExplosionDurationMs, easing = NothingMotion.Easing.emphasizedDecelerate)) { it / 2 } + fadeIn(animationSpec = tween(NothingMotion.CallAnimations.acceptExplosionDurationMs)) + scaleIn(initialScale = 0.95f, animationSpec = tween(NothingMotion.CallAnimations.acceptExplosionDurationMs, easing = NothingMotion.Easing.emphasizedDecelerate)),
+            exit = slideOutHorizontally(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate)) { it } + fadeOut(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs)) + scaleOut(targetScale = 0.95f, animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate))
         ) {
             selectedContact?.let { contact ->
                 ContactDetailScreen(
@@ -294,8 +298,8 @@ fun GlyphDialContent(
         // Call Detail Overlay
         AnimatedVisibility(
             visible = selectedCall != null,
-            enter = slideInHorizontally { it } + fadeIn(),
-            exit = slideOutHorizontally { it } + fadeOut()
+            enter = slideInHorizontally(animationSpec = tween(NothingMotion.CallAnimations.acceptExplosionDurationMs, easing = NothingMotion.Easing.emphasizedDecelerate)) { it / 2 } + fadeIn(animationSpec = tween(NothingMotion.CallAnimations.acceptExplosionDurationMs)) + scaleIn(initialScale = 0.95f, animationSpec = tween(NothingMotion.CallAnimations.acceptExplosionDurationMs, easing = NothingMotion.Easing.emphasizedDecelerate)),
+            exit = slideOutHorizontally(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate)) { it } + fadeOut(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs)) + scaleOut(targetScale = 0.95f, animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate))
         ) {
             selectedCall?.let { call ->
                 CallDetailScreen(
