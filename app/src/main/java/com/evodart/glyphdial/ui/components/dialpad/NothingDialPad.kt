@@ -19,6 +19,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import com.evodart.glyphdial.ui.theme.NothingColors
 import com.evodart.glyphdial.ui.theme.NothingTextStyles
 
@@ -156,9 +157,6 @@ private fun DialPadRow(
     }
 }
 
-/**
- * Individual dial pad button with expanding ring animation
- */
 @Composable
 fun NothingDialButton(
     digit: Char,
@@ -168,65 +166,34 @@ fun NothingDialButton(
     onLongPress: (() -> Unit)? = null,
     enabled: Boolean = true
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-    var animationKey by remember { mutableIntStateOf(0) }
-    
     Box(
         modifier = Modifier
-            .size(size + 16.dp)
-            .pointerInput(enabled) {
-                if (enabled) {
-                    detectTapGestures(
-                        onPress = {
-                            isPressed = true
-                            animationKey++
-                            val released = tryAwaitRelease()
-                            isPressed = false
-                        },
-                        onTap = { onPress() },
-                        onLongPress = { onLongPress?.invoke() }
-                    )
-                }
-            },
+            .size(size)
+            .clip(CircleShape)
+            .nothingClickable(
+                enabled = enabled,
+                rippleColor = NothingColors.NothingRed
+            ) {
+                onPress()
+            }
+            .background(NothingColors.SurfaceCard),
         contentAlignment = Alignment.Center
     ) {
-        // Ring animation
-        key(animationKey) {
-            if (animationKey > 0) {
-                ExpandingRingAnimation(
-                    color = NothingColors.NothingRed,
-                    modifier = Modifier.size(size + 16.dp)
-                )
-            }
-        }
-        
-        // Button background
-        Box(
-            modifier = Modifier
-                .size(size)
-                .clip(CircleShape)
-                .background(
-                    if (isPressed) NothingColors.SurfaceCard.copy(alpha = 0.7f)
-                    else NothingColors.SurfaceCard
-                ),
-            contentAlignment = Alignment.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Text(
+                text = digit.toString(),
+                style = NothingTextStyles.dialPadNumber,
+                color = if (enabled) NothingColors.PureWhite else NothingColors.Gray
+            )
+            
+            if (letters.isNotEmpty()) {
                 Text(
-                    text = digit.toString(),
-                    style = NothingTextStyles.dialPadNumber,
-                    color = if (enabled) NothingColors.PureWhite else NothingColors.Gray
+                    text = letters,
+                    style = NothingTextStyles.dialPadLetters,
+                    color = if (enabled) NothingColors.SilverGray else NothingColors.DarkGray
                 )
-                
-                if (letters.isNotEmpty()) {
-                    Text(
-                        text = letters,
-                        style = NothingTextStyles.dialPadLetters,
-                        color = if (enabled) NothingColors.SilverGray else NothingColors.DarkGray
-                    )
-                }
             }
         }
     }
