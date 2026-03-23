@@ -4,65 +4,60 @@ plan: 1
 wave: 1
 ---
 
-# Plan 3.1: Contact Actions & Call Log Filters
+# Plan 3.1: Rip Out DotMatrix & Fix Core Bugs
 
 ## Objective
-Implement missing core UI functionality for managing contacts and navigating the call log efficiently.
+Remove the DotMatrix ripple entirely globally, fix the broken Call State transitions, and instantly sync Call Logs.
 
 ## Context
-- .gsd/SPEC.md (REQ-04, REQ-05, REQ-08)
-- .gsd/ROADMAP.md (Phase 3)
-- app/src/main/java/com/evodart/glyphdial/data/repository/ContactRepository.kt
-- app/src/main/java/com/evodart/glyphdial/ui/viewmodel/CallLogViewModel.kt
+- .gsd/DECISIONS.md (User requests removing DotMatrix and fixing glitches)
+- app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt
+- app/src/main/java/com/evodart/glyphdial/ui/components/animation/InteractionModifiers.kt
 
 ## Tasks
 
 <task type="auto">
-  <name>Implement System Intent Wrappers for Contacts</name>
+  <name>Remove DotMatrix Ripple Globally</name>
   <files>
-    - app/src/main/java/com/evodart/glyphdial/utils/ContactIntents.kt
-    - app/src/main/java/com/evodart/glyphdial/ui/screens/contacts/ContactDetailScreen.kt
+    - app/src/main/java/com/evodart/glyphdial/ui/components/animation/InteractionModifiers.kt
   </files>
   <action>
-    - Create a singleton `ContactIntents` utility class.
-    - Add methods to generate intents for: `createContact()`, `editContact(uri)`, `shareContact(uri)`.
-    - In `ContactDetailScreen.kt`, wire up the Edit, Share, and "Add to contacts" (for unknown numbers) buttons to launch these intents using `LocalContext.current.startActivity()`.
+    - Completely gut the dot calculation and Canvas drawing logic inside `nothingClickable`.
+    - Replace the custom `indication = null` with standard Compose `indication = ripple(...)`. Keep the haptic ticks and micro-scale down effect on press (so it still feels premium and tactile), but remove the visual dots entirely.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>User can cleanly hand off complex contact creation/editing to the system app, keeping our dialer fast and scoped.</done>
+  <done>All buttons across the app show standard, clean ripples instead of dot matrix explosions.</done>
 </task>
 
 <task type="auto">
-  <name>Implement Direct Content Actions (Favorite & Block)</name>
+  <name>Fix Call State Machine Teardown</name>
   <files>
-    - app/src/main/java/com/evodart/glyphdial/data/repository/ContactRepository.kt
-    - app/src/main/java/com/evodart/glyphdial/ui/viewmodel/ContactsViewModel.kt
+    - app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt
+    - app/src/main/java/com/evodart/glyphdial/ui/viewmodel/CallViewModel.kt
   </files>
   <action>
-    - Add `toggleFavorite(contactId: Long, isFavorite: Boolean)` in `ContactRepository` using `ContentProviderOperation` to update `ContactsContract.Contacts.STARRED`.
-    - Add `blockNumber(number: String)` and `unblockNumber(number: String)` using `BlockedNumberContract.BlockedNumbers` (with try/catch for SecurityException if not default dialer).
-    - Expose these actions through the view model and trigger them from the UI.
+    - Ensure when `onCallRemoved` or state hits `STATE_DISCONNECTED`, the service instantly notifies the ViewModel to close the `InCallActivity`.
+    - Remove artificial delays or ensure `CallViewModel` doesn't fallback to `STATE_DIALING` if it was already active before tear down.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>Contacts can be starred and unstarred directly from our app, and numbers can be added to the system blocklist.</done>
+  <done>Hanging up an active call instantly closes the calling screen without bouncing back to a dialing UI.</done>
 </task>
 
 <task type="auto">
-  <name>Call Log Filtering Tabs</name>
+  <name>Instant Call Log Syncing</name>
   <files>
+    - app/src/main/java/com/evodart/glyphdial/data/repository/CallLogRepository.kt
     - app/src/main/java/com/evodart/glyphdial/ui/viewmodel/CallLogViewModel.kt
-    - app/src/main/java/com/evodart/glyphdial/ui/screens/recents/RecentsScreen.kt
   </files>
   <action>
-    - Add a `CallLogFilter` enum (ALL, MISSED, INCOMING, OUTGOING).
-    - Update `CallLogViewModel` to hold the current filter state and derive a `filteredCallLog` flow.
-    - In `RecentsScreen.kt`, add a custom Nothing-style pill tab row below the top bar to switch between these filters.
+    - Implement a Kotlin Flow or `ContentObserver` in `CallLogRepository` that observes `CallLog.Calls.CONTENT_URI`.
+    - `CallLogViewModel` should collect this flow so the Recents UI always stays instantly up-to-date.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>Call logs can be filtered instantly by type without requiring a database requery, using in-memory flows.</done>
+  <done>After a call ends, the Recents tab immediately shows the latest record without an app restart.</done>
 </task>
 
 ## Success Criteria
-- [ ] Tapping "Edit" on a contact opens the system contact editor.
-- [ ] Tapping the "Star" icon instantly updates the favorite status locally and in the system database.
-- [ ] Recents screen includes pill filters for All, Missed, Outgoing, and Incoming calls.
+- [ ] Tapping the dialpad flashes a standard dark ripple.
+- [ ] Finishing a call instantly returns to the app.
+- [ ] The call is instantly visible in Recents.

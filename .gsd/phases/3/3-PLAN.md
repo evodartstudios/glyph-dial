@@ -4,41 +4,42 @@ plan: 3
 wave: 2
 ---
 
-# Plan 3.3: Advanced In-Call Features
+# Plan 3.3: Smart T9 Search & Advanced Telecom
 
 ## Objective
-Wire up the `GlyphDialCallService` and `InCallScreen` to support DTMF tones and Dual-SIM operations.
+Implement blazing-fast T9 predictive search and wire up essential in-call Telecom features like DTMF and Dual-SIM.
 
 ## Context
-- .gsd/SPEC.md (REQ-07, REQ-12)
+- .gsd/SPEC.md (REQ-09, REQ-07, REQ-12)
+- app/src/main/java/com/evodart/glyphdial/data/repository/ContactRepository.kt
+- app/src/main/java/com/evodart/glyphdial/ui/viewmodel/DialerViewModel.kt
 - app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt
-- app/src/main/java/com/evodart/glyphdial/ui/components/dialpad/CallActionBar.kt
 
 ## Tasks
 
 <task type="auto">
-  <name>Implement DTMF Control in Call Service</name>
+  <name>Build T9 Trie Index</name>
   <files>
-    - app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt
-    - app/src/main/java/com/evodart/glyphdial/service/CallConstants.kt
+    - app/src/main/java/com/evodart/glyphdial/utils/T9Trie.kt
+    - app/src/main/java/com/evodart/glyphdial/ui/viewmodel/DialerViewModel.kt
   </files>
   <action>
-    - Expose methods `playDtmfTone(char)` and `stopDtmfTone()` in the `GlyphDialCallService` bound interface.
-    - Under the hood, safely apply these to the active `android.telecom.Call`.
-    - Provide an audio fallback using `ToneGenerator(AudioManager.STREAM_DTMF, 80)` so the user hears the feedback.
+    - Create a `T9Trie` class mapping characters (a-c -> 2, d-f -> 3, etc.).
+    - Update `DialerViewModel` search logic to use the `T9Trie` for sub-100ms lookup instead of basic `.contains()` filtering.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>Service layer manages DTMF start/stop states predictably and safely routes them to the active phone call.</done>
+  <done>Typing numbers on the dialpad brings up suggestions instantly based on T9 mapping.</done>
 </task>
 
 <task type="auto">
-  <name>Connect UI Keypad to DTMF</name>
+  <name>Implement DTMF Control</name>
   <files>
+    - app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt
     - app/src/main/java/com/evodart/glyphdial/ui/screens/incall/InCallScreen.kt
   </files>
   <action>
-    - Provide a keypad overlay state in the active call screen.
-    - Wire the `PointerInput` `ACTION_DOWN` / `ACTION_UP` gestures of the `NothingDialButton` to trigger `playDtmfTone` and `stopDtmfTone` respectively via the View Model or bound service interface.
+    - Expose `playDtmfTone(char)` and `stopDtmfTone()` in the `GlyphDialCallService` bound interface, interacting with `android.telecom.Call`.
+    - Provide a keypad overlay state in the active call screen, triggering these methods on `ACTION_DOWN` / `ACTION_UP`.
   </action>
   <verify>./gradlew assembleDebug</verify>
   <done>Pressing digits during an active call relays the tones into the IVR via TelecomManager correctly timed with the user's touch.</done>
@@ -48,17 +49,17 @@ Wire up the `GlyphDialCallService` and `InCallScreen` to support DTMF tones and 
   <name>Dual-SIM Capability Routing</name>
   <files>
     - app/src/main/java/com/evodart/glyphdial/ui/components/dialpad/CallActionBar.kt
-    - app/src/main/java/com/evodart/glyphdial/ui/viewmodel/DialerViewModel.kt
   </files>
   <action>
     - Use `TelecomManager.callCapablePhoneAccounts` to extract available SIM metadata (carrier names, slot ids).
-    - If multiple SIMs are detected (list size > 1) and there is no default selected, pop up a bottom sheet in `CallActionBar` when dialing.
+    - If multiple SIMs are detected without a system default, pop up a bottom sheet when dialing.
     - Attach the selected `PhoneAccountHandle` into the `EXTRA_PHONE_ACCOUNT_HANDLE` argument when executing the `ACTION_CALL` intent.
   </action>
   <verify>./gradlew assembleDebug</verify>
-  <done>Users with dual-SIM devices will correctly be prompted to select a calling SIM, avoiding default drops.</done>
+  <done>Users with dual-SIM devices will correctly be prompted to select a calling SIM.</done>
 </task>
 
 ## Success Criteria
+- [ ] No dropped frames when typing rapidly on the dialpad.
 - [ ] Pressing 1 during a call plays the DTMF tone for the entire duration of the press.
 - [ ] Calling from a multi-SIM environment correctly routes using the user's selected Handle without defaulting.
