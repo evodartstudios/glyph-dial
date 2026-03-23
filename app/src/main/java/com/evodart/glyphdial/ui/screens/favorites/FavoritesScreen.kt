@@ -1,7 +1,7 @@
 package com.evodart.glyphdial.ui.screens.favorites
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -98,7 +98,7 @@ private fun FavoriteGridItem(
             .aspectRatio(0.85f)
             .clip(if (isCircle) CircleShape else RoundedCornerShape(20.dp))
             .background(NothingColors.SurfaceCard)
-            .clickable(onClick = onClick)
+            .nothingClickable(onClick = onClick)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -150,7 +150,7 @@ private fun FavoriteGridItem(
             tint = NothingColors.PureWhite,
             modifier = Modifier
                 .size(22.dp)
-                .clickable(onClick = onCallClick)
+                .nothingClickable(onClick = onCallClick)
         )
     }
 }

@@ -2,7 +2,7 @@ package com.evodart.glyphdial.ui.components.dialpad
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -160,10 +160,10 @@ private fun CallButton(
             .scale(scale)
             .clip(CircleShape)
             .background(accentColor)
-            .clickable(
+            .nothingClickable(
                 enabled = enabled,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                
                 onClick = onClick
             ),
         contentAlignment = Alignment.Center
@@ -219,10 +219,10 @@ private fun SimButton(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable(
+            .nothingClickable(
                 enabled = enabled,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                
                 onClick = onClick
             )
             .padding(8.dp),
@@ -279,7 +279,7 @@ private fun SimPickerDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .background(NothingColors.SurfaceCard)
-                        .clickable { onSimSelected(0) }
+                        .nothingClickable { onSimSelected(0) }
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -301,7 +301,7 @@ private fun SimPickerDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .background(NothingColors.SurfaceCard)
-                        .clickable { onSimSelected(1) }
+                        .nothingClickable { onSimSelected(1) }
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

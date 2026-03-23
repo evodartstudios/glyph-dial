@@ -1,11 +1,12 @@
 package com.evodart.glyphdial.ui.components.navigation
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.PagerState
@@ -78,7 +79,7 @@ fun NothingBottomNav(
         ) {
             // Selection indicator with accent color
             SelectionIndicator(
-                selectedIndex = selectedIndex,
+                pagerState = pagerState,
                 hideForDial = selectedRoute == "dial",
                 accentColor = accentColor
             )
@@ -128,17 +129,14 @@ fun NothingBottomNav(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SelectionIndicator(
-    selectedIndex: Int,
+    pagerState: PagerState,
     hideForDial: Boolean,
     accentColor: Color
 ) {
-    val animatedIndex by animateFloatAsState(
-        targetValue = selectedIndex.toFloat(),
-        animationSpec = tween(150),
-        label = "indicator"
-    )
+    val animatedIndex = (pagerState.currentPage + pagerState.currentPageOffsetFraction).coerceIn(0f, 4f)
     
     if (!hideForDial) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -174,9 +172,9 @@ private fun DialButton(
             .scale(scale)
             .clip(CircleShape)
             .background(accentColor)
-            .clickable(
+            .nothingClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                
                 onClick = onClick
             ),
         contentAlignment = Alignment.Center
@@ -216,10 +214,11 @@ private fun NavItemButton(
         modifier = Modifier
             .size(24.dp)
             .scale(scale)
-            .clickable(
+            .nothingClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                
                 onClick = onClick
             )
     )
 }
+

@@ -125,7 +125,7 @@ fun Modifier.nothingClickable(
         }
         .combinedClickable(
             interactionSource = actualInteractionSource,
-            indication = null, // Disable default standard android ripple entirely
+            // Disable default standard android ripple entirely
             enabled = enabled,
             role = role,
             onLongClick = onLongClick,

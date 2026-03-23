@@ -3,7 +3,7 @@ package com.evodart.glyphdial.ui.screens.contacts
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -257,7 +257,7 @@ private fun QuickActionButton(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.nothingClickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier

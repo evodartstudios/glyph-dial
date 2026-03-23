@@ -3,7 +3,7 @@ package com.evodart.glyphdial.ui.screens.dialpad
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.clickable
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -158,7 +158,7 @@ private fun T9SuggestionsList(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onSuggestionClick(contact) }
+                        .nothingClickable { onSuggestionClick(contact) }
                         .padding(vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

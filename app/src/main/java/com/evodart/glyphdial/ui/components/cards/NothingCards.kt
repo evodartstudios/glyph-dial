@@ -1,9 +1,10 @@
 package com.evodart.glyphdial.ui.components.cards
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -72,9 +73,8 @@ fun NothingCard(
             )
             .then(
                 if (onClick != null && enabled) {
-                    Modifier.clickable(
+                    Modifier.nothingClickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = NothingColors.NothingRed.copy(alpha = 0.3f)),
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onClick()
@@ -422,3 +422,4 @@ fun NothingAccentCard(
         }
     }
 }
+

@@ -1,4 +1,5 @@
 package com.evodart.glyphdial.ui.screens.settings
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -7,7 +8,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -335,7 +336,7 @@ private fun StartupSettingsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onDefaultStartPageChange(value) }
+                            .nothingClickable { onDefaultStartPageChange(value) }
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -706,7 +707,7 @@ private fun SettingsNavItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .nothingClickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -752,7 +753,7 @@ private fun SettingsToggleRow(
     accentColor: Color
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
+        modifier = Modifier.fillMaxWidth().nothingClickable(onClick = onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icon, null, tint = NothingColors.SilverGray, modifier = Modifier.size(24.dp))
@@ -775,7 +776,7 @@ private fun SettingsSwitch(
     accentColor: Color
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable { onCheckedChange(!checked) }.padding(16.dp),
+        modifier = Modifier.fillMaxWidth().nothingClickable { onCheckedChange(!checked) }.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icon, null, tint = NothingColors.SilverGray, modifier = Modifier.size(24.dp))
@@ -825,7 +826,7 @@ private fun ColorSwatch(color: Color, isSelected: Boolean, onClick: () -> Unit) 
     Box(
         modifier = Modifier.size(36.dp).clip(CircleShape).background(color)
             .then(if (isSelected) Modifier.border(3.dp, NothingColors.PureWhite, CircleShape) else Modifier)
-            .clickable(onClick = onClick),
+            .nothingClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         if (isSelected) {
@@ -845,3 +846,4 @@ private fun InfoRow(icon: ImageVector, title: String, value: String) {
         Text(value, style = MaterialTheme.typography.bodyMedium, color = NothingColors.SilverGray)
     }
 }
+
