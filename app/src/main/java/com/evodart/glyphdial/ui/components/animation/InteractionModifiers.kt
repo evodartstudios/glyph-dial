@@ -51,81 +51,17 @@ fun Modifier.nothingClickable(
         }
     }
 
-    // A fast, precalculated dot explosion state.
-    // Instead of instantiating hundreds of objects, we manage simple float arrays.
-    class DotRippleState {
-        var progress by mutableFloatStateOf(0f)
-        var centerX by mutableFloatStateOf(0f)
-        var centerY by mutableFloatStateOf(0f)
-        var isRunning by mutableStateOf(false)
-        val endRadius = 150f
-    }
-    
-    val rippleState = remember { DotRippleState() }
-
-    LaunchedEffect(isPressed) {
-        if (isPressed is PressInteraction.Release) {
-            val press = (isPressed as PressInteraction.Release).press
-            rippleState.centerX = press.pressPosition.x
-            rippleState.centerY = press.pressPosition.y
-            rippleState.progress = 0f
-            rippleState.isRunning = true
-            
-            launch {
-                Animatable(0f).animateTo(
-                    1f,
-                    animationSpec = tween(400, easing = NothingMotion.Easing.easeOut)
-                ) {
-                    rippleState.progress = value
-                }
-                rippleState.isRunning = false
-            }
-        }
-    }
+    // Standard ripple, themed to match the app
+    val rippleIndication = androidx.compose.material3.ripple(color = rippleColor)
 
     this
         .graphicsLayer {
             scaleX = scale.value
             scaleY = scale.value
         }
-        .drawWithContent {
-            drawContent()
-            if (rippleState.isRunning) {
-                val prg = rippleState.progress
-                val radius = prg * rippleState.endRadius
-                val alpha = (1f - prg).coerceIn(0f, 1f)
-                val dotScale = 1f - prg * 0.5f
-                
-                // Extremely optimized static 8-dot blast
-                for (i in 0 until 8) {
-                    val angle = (i / 8f) * 2 * PI
-                    val x = rippleState.centerX + (cos(angle) * radius).toFloat()
-                    val y = rippleState.centerY + (sin(angle) * radius).toFloat()
-                    
-                    drawCircle(
-                        color = rippleColor.copy(alpha = alpha),
-                        radius = 6f * dotScale,
-                        center = Offset(x, y)
-                    )
-                }
-                
-                // Inner ring
-                for (i in 0 until 4) {
-                    val angle = (i / 4f) * 2 * PI + (PI/4)
-                    val x = rippleState.centerX + (cos(angle) * radius * 0.5f).toFloat()
-                    val y = rippleState.centerY + (sin(angle) * radius * 0.5f).toFloat()
-                    
-                    drawCircle(
-                        color = rippleColor.copy(alpha = alpha * 0.7f),
-                        radius = 4f * dotScale,
-                        center = Offset(x, y)
-                    )
-                }
-            }
-        }
         .combinedClickable(
             interactionSource = actualInteractionSource,
-            // Disable default standard android ripple entirely
+            indication = rippleIndication,
             enabled = enabled,
             role = role,
             onLongClick = onLongClick,

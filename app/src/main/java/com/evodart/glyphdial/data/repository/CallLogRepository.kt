@@ -8,9 +8,11 @@ import com.evodart.glyphdial.data.model.CallLogEntry
 import com.evodart.glyphdial.data.model.CallType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.callbackFlow
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,15 +24,53 @@ private const val TAG = "CallLogRepository"
  */
 @Singleton
 class CallLogRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     private val contentResolver: ContentResolver = context.contentResolver
     
     /**
      * Get recent calls
      */
-    fun getRecentCalls(limit: Int = 100): Flow<List<CallLogEntry>> = flow {
-        try {
+    /**
+     * Get recent calls reactively
+     */
+    fun getRecentCalls(limit: Int = 100): Flow<List<CallLogEntry>> = kotlinx.coroutines.flow.callbackFlow {
+        val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                trySend(fetchRecentCalls(limit))
+            }
+        }
+        contentResolver.registerContentObserver(CallLog.Calls.CONTENT_URI, true, observer)
+        
+        // Initial load
+        trySend(fetchRecentCalls(limit))
+        
+        awaitClose {
+            contentResolver.unregisterContentObserver(observer)
+        }
+    }.flowOn(Dispatchers.IO)
+    
+    /**
+     * Get missed calls reactively
+     */
+    fun getMissedCalls(): Flow<List<CallLogEntry>> = kotlinx.coroutines.flow.callbackFlow {
+        val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                trySend(fetchMissedCalls())
+            }
+        }
+        contentResolver.registerContentObserver(CallLog.Calls.CONTENT_URI, true, observer)
+        
+        // Initial load
+        trySend(fetchMissedCalls())
+        
+        awaitClose {
+            contentResolver.unregisterContentObserver(observer)
+        }
+    }.flowOn(Dispatchers.IO)
+
+    private fun fetchRecentCalls(limit: Int): List<CallLogEntry> {
+        return try {
             val calls = mutableListOf<CallLogEntry>()
             
             val projection = arrayOf(
@@ -79,22 +119,18 @@ class CallLogRepository @Inject constructor(
                     count++
                 }
             }
-            
-            emit(calls)
+            calls
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission denied reading call log", e)
-            emit(emptyList())
+            emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error loading recent calls", e)
-            emit(emptyList())
+            emptyList()
         }
-    }.flowOn(Dispatchers.IO)
-    
-    /**
-     * Get missed calls
-     */
-    fun getMissedCalls(): Flow<List<CallLogEntry>> = flow {
-        try {
+    }
+
+    private fun fetchMissedCalls(): List<CallLogEntry> {
+        return try {
             val calls = mutableListOf<CallLogEntry>()
             
             val cursor = contentResolver.query(
@@ -138,16 +174,15 @@ class CallLogRepository @Inject constructor(
                     )
                 }
             }
-            
-            emit(calls)
+            calls
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission denied reading missed calls", e)
-            emit(emptyList())
+            emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error loading missed calls", e)
-            emit(emptyList())
+            emptyList()
         }
-    }.flowOn(Dispatchers.IO)
+    }
     
     private fun mapCallType(type: Int): CallType {
         return when (type) {

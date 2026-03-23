@@ -1,0 +1,91 @@
+
+> Configure project :app
+WARNING: The option setting 'android.usesSdkInManifest.disallowed=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.sdk.defaultTargetSdkToCompileSdkIfUnset=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.enableAppCompileTimeRClass=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.r8.optimizedResourceShrinking=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:checkDebugAarMetadata
+> Task :app:processDebugNavigationResources
+> Task :app:compileDebugNavigationResources
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:kspDebugKotlin
+
+> Task :app:compileDebugKotlin
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/InCallActivity.kt:52:40 'static field FLAG_DISMISS_KEYGUARD: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/InCallActivity.kt:53:40 'static field FLAG_SHOW_WHEN_LOCKED: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/InCallActivity.kt:54:40 'static field FLAG_TURN_SCREEN_ON: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/MainActivity.kt:89:44 'fun <reified VM : ViewModel> hiltViewModel(viewModelStoreOwner: ViewModelStoreOwner = ..., key: String? = ...): VM' is deprecated. Moved to package: androidx.hilt.lifecycle.viewmodel.compose.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/MainActivity.kt:90:42 'fun <reified VM : ViewModel> hiltViewModel(viewModelStoreOwner: ViewModelStoreOwner = ..., key: String? = ...): VM' is deprecated. Moved to package: androidx.hilt.lifecycle.viewmodel.compose.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/MainActivity.kt:91:40 'fun <reified VM : ViewModel> hiltViewModel(viewModelStoreOwner: ViewModelStoreOwner = ..., key: String? = ...): VM' is deprecated. Moved to package: androidx.hilt.lifecycle.viewmodel.compose.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/MainActivity.kt:92:44 'fun <reified VM : ViewModel> hiltViewModel(viewModelStoreOwner: ViewModelStoreOwner = ..., key: String? = ...): VM' is deprecated. Moved to package: androidx.hilt.lifecycle.viewmodel.compose.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/data/repository/CallLogRepository.kt:25:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/data/repository/ContactRepository.kt:26:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/data/settings/SettingsDataStore.kt:24:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt:87:30 'fun setAudioRoute(p0: Int): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt:130:46 'val state: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt:153:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt:154:15 'fun onCallAudioStateChanged(p0: CallAudioState!): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt:208:30 'val state: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt:209:30 'val state: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/service/GlyphDialCallService.kt:209:66 'val state: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/ui/screens/call/CallScreens.kt:429:52 'val Icons.Filled.VolumeUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.VolumeUp.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/ui/screens/call/CallScreens.kt:429:79 'val Icons.Filled.VolumeDown: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.VolumeDown.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/ui/theme/Theme.kt:110:20 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///E:/EvoDart/Android/Nothing%20Dialer/app/src/main/java/com/evodart/glyphdial/ui/theme/Theme.kt:111:20 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+
+BUILD SUCCESSFUL in 19s
+18 actionable tasks: 18 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.1/userguide/configuration_cache_enabling.html

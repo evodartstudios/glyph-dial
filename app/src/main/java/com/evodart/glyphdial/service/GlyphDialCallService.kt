@@ -84,10 +84,33 @@ class GlyphDialCallService : InCallService() {
         }
         
         fun setSpeaker(enabled: Boolean) {
-            serviceInstance?.setAudioRoute(
-                if (enabled) CallAudioState.ROUTE_SPEAKER 
-                else CallAudioState.ROUTE_EARPIECE
-            )
+            val instance = serviceInstance ?: return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                // Modern API: requestCallEndpointChange (API 34+)
+                val targetType = if (enabled) {
+                    android.telecom.CallEndpoint.TYPE_SPEAKER
+                } else {
+                    android.telecom.CallEndpoint.TYPE_EARPIECE
+                }
+                val currentEndpoints = instance.availableEndpoints
+                val targetEndpoint = currentEndpoints.firstOrNull { it.endpointType == targetType }
+                if (targetEndpoint != null) {
+                    instance.requestCallEndpointChange(
+                        targetEndpoint,
+                        instance.mainExecutor,
+                        object : android.os.OutcomeReceiver<Void, android.telecom.CallEndpointException> {
+                            override fun onResult(result: Void?) {}
+                            override fun onError(error: android.telecom.CallEndpointException) {}
+                        }
+                    )
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                instance.setAudioRoute(
+                    if (enabled) CallAudioState.ROUTE_SPEAKER
+                    else CallAudioState.ROUTE_EARPIECE
+                )
+            }
         }
         
         fun updateCallerInfo(name: String?, photoUri: String?) {
@@ -123,11 +146,21 @@ class GlyphDialCallService : InCallService() {
         super.onDestroy()
         serviceInstance = null
     }
+
+    private var availableEndpoints: List<android.telecom.CallEndpoint> = emptyList()
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    override fun onAvailableCallEndpointsChanged(endpoints: List<android.telecom.CallEndpoint>) {
+        super.onAvailableCallEndpointsChanged(endpoints)
+        availableEndpoints = endpoints
+    }
     
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
         _currentCall.value = call
-        _callState.value = mapCallState(call.state)
+        @Suppress("DEPRECATION")
+        val callState = call.details?.state ?: call.state
+        _callState.value = mapCallState(callState)
         call.registerCallback(callCallback)
         
         // Launch InCallActivity
@@ -150,7 +183,9 @@ class GlyphDialCallService : InCallService() {
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
     
+    @Deprecated("Deprecated in API 34. Kept for backward compatibility on older devices.")
     override fun onCallAudioStateChanged(audioState: CallAudioState) {
+        @Suppress("DEPRECATION")
         super.onCallAudioStateChanged(audioState)
         _audioState.value = audioState
     }
@@ -205,8 +240,9 @@ class GlyphDialCallService : InCallService() {
             ?: call.details?.callerDisplayName?.takeIf { it.isNotBlank() } 
             ?: formatPhoneNumber(callerNumber)
         
-        val isRinging = call.state == Call.STATE_RINGING
-        val isDialing = call.state == Call.STATE_DIALING || call.state == Call.STATE_CONNECTING
+        val currentState = call.details?.state ?: @Suppress("DEPRECATION") call.state
+        val isRinging = currentState == Call.STATE_RINGING
+        val isDialing = currentState == Call.STATE_DIALING || currentState == Call.STATE_CONNECTING
         val channelId = if (isRinging) CHANNEL_INCOMING else CHANNEL_ACTIVE
         
         val fullScreenIntent = Intent(this, InCallActivity::class.java)

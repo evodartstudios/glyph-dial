@@ -47,12 +47,11 @@ class InCallActivity : ComponentActivity() {
         setTurnScreenOn(true)
         
         // Keep screen on during call
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
+        // Dismiss keyguard (modern replacement for FLAG_DISMISS_KEYGUARD)
+        val keyguardManager = getSystemService(android.app.KeyguardManager::class.java)
+        keyguardManager?.requestDismissKeyguard(this, null)
         
         enableEdgeToEdge()
         
@@ -110,10 +109,9 @@ fun InCallContent(
         }
     }
     
-    // Finish when call ends
+    // Finish when call ends instantly
     LaunchedEffect(callState) {
         if (callState == CallState.DISCONNECTED || callState == CallState.IDLE) {
-            delay(1000) // Brief delay before closing
             onFinish()
         }
     }

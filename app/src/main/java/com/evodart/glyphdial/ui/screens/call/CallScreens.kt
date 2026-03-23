@@ -9,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeDown
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -426,7 +428,7 @@ private fun ActionButtonsGrid(
                 onClick = onKeypadClick
             )
             ActionButton(
-                icon = if (isSpeaker) Icons.Filled.VolumeUp else Icons.Filled.VolumeDown,
+                icon = if (isSpeaker) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeDown,
                 label = "speaker",
                 isActive = isSpeaker,
                 onClick = onSpeakerToggle
