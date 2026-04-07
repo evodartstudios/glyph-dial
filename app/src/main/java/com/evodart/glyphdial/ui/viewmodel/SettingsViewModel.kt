@@ -45,6 +45,17 @@ class SettingsViewModel @Inject constructor(
             initialValue = AccentColor.RED
         )
 
+    val defaultSimSlot: StateFlow<Int> = settingsDataStore.defaultSimSlot
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = -1
+        )
+
+    fun setDefaultSimSlot(slot: Int) {
+        viewModelScope.launch { settingsDataStore.setDefaultSimSlot(slot) }
+    }
+
     fun setDefaultStartPage(page: String) {
         viewModelScope.launch { settingsDataStore.setDefaultStartPage(page) }
     }

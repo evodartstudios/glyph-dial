@@ -61,17 +61,22 @@ data class StackedCallGroup(
 /**
  * Recent calls screen with stacked calls
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecentsScreen(
     calls: List<CallLogEntry>,
     onCallClick: (CallLogEntry) -> Unit,
     onRedialClick: (String) -> Unit,
+    onDeleteGroup: (StackedCallGroup) -> Unit = {},
+    onClearAll: () -> Unit = {},
     modifier: Modifier = Modifier,
     isLoading: Boolean = false
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var expandedGroupId by remember { mutableStateOf<String?>(null) }
-    
+    var showOverflow by remember { mutableStateOf(false) }
+    var showClearConfirm by remember { mutableStateOf(false) }
+
     // Filter calls based on search
     val filteredCalls = remember(calls, searchQuery) {
         if (searchQuery.isBlank()) calls
@@ -80,20 +85,46 @@ fun RecentsScreen(
             call.number.contains(searchQuery)
         }
     }
-    
+
     // Stack consecutive calls from same number
     val stackedGroups = remember(filteredCalls) {
         stackConsecutiveCalls(filteredCalls)
     }
-    
+
     Column(modifier = modifier.fillMaxSize()) {
-        com.evodart.glyphdial.ui.components.search.NothingSearchBar(
-            query = searchQuery,
-            onQueryChange = { searchQuery = it },
-            placeholder = "Search recents",
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        
+        // Top bar with search + overflow
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            com.evodart.glyphdial.ui.components.search.NothingSearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Search recents",
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+            )
+            Box {
+                IconButton(onClick = { showOverflow = true }) {
+                    Icon(Icons.Filled.MoreVert, "More options", tint = NothingColors.SilverGray)
+                }
+                DropdownMenu(
+                    expanded = showOverflow,
+                    onDismissRequest = { showOverflow = false },
+                    modifier = Modifier.background(NothingColors.CharcoalBlack)
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Clear all", color = NothingColors.NothingRed) },
+                        onClick = { showOverflow = false; showClearConfirm = true },
+                        leadingIcon = {
+                            Icon(Icons.Filled.DeleteSweep, null, tint = NothingColors.NothingRed)
+                        }
+                    )
+                }
+            }
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
             if (isLoading) {
                 CircularProgressIndicator(
@@ -113,7 +144,7 @@ fun RecentsScreen(
                 val groupedByDate = stackedGroups.groupBy { group ->
                     group.latestCall.timestamp.atZone(ZoneId.systemDefault()).toLocalDate()
                 }.toSortedMap(compareByDescending { it })
-                
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(vertical = 8.dp)
@@ -122,32 +153,82 @@ fun RecentsScreen(
                         item(key = "header_$date") {
                             DateHeader(date = date)
                         }
-                        
+
                         items(
                             items = groups,
                             key = { "${it.number}_${it.latestCall.id}" }
                         ) { group ->
                             val groupId = "${group.number}_${group.latestCall.id}"
                             val isExpanded = expandedGroupId == groupId
-                            
-                            StackedCallItem(
-                                group = group,
-                                isExpanded = isExpanded,
-                                onHeaderClick = {
-                                    if (group.isStacked) {
-                                        expandedGroupId = if (isExpanded) null else groupId
-                                    } else {
-                                        onCallClick(group.latestCall)
-                                    }
+
+                            val dismissState = rememberSwipeToDismissBoxState(
+                                confirmValueChange = { value ->
+                                    if (value == SwipeToDismissBoxValue.EndToStart) {
+                                        onDeleteGroup(group)
+                                        true
+                                    } else false
                                 },
-                                onCallClick = onCallClick,
-                                onRedialClick = { onRedialClick(group.number) }
+                                positionalThreshold = { it * 0.4f }
                             )
+
+                            SwipeToDismissBox(
+                                state = dismissState,
+                                enableDismissFromStartToEnd = false,
+                                backgroundContent = {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(NothingColors.NothingRed.copy(alpha = 0.15f))
+                                            .padding(end = 20.dp),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "Delete call log entry",
+                                            tint = NothingColors.NothingRed
+                                        )
+                                    }
+                                }
+                            ) {
+                                StackedCallItem(
+                                    group = group,
+                                    isExpanded = isExpanded,
+                                    onHeaderClick = {
+                                        if (group.isStacked) {
+                                            expandedGroupId = if (isExpanded) null else groupId
+                                        } else {
+                                            onCallClick(group.latestCall)
+                                        }
+                                    },
+                                    onCallClick = onCallClick,
+                                    onRedialClick = { onRedialClick(group.number) }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    // Confirm clear all dialog
+    if (showClearConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirm = false },
+            title = { Text("Clear call log?", color = NothingColors.PureWhite) },
+            text = { Text("This will permanently delete your entire call history.", color = NothingColors.SilverGray) },
+            confirmButton = {
+                TextButton(onClick = { onClearAll(); showClearConfirm = false }) {
+                    Text("Clear all", color = NothingColors.NothingRed)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirm = false }) {
+                    Text("Cancel", color = NothingColors.SilverGray)
+                }
+            },
+            containerColor = NothingColors.CharcoalBlack
+        )
     }
 }
 
@@ -315,6 +396,24 @@ private fun StackedCallItem(
                 )
                 
                 Spacer(modifier = Modifier.width(8.dp))
+            }
+            // Add to Contacts button for unknown numbers
+            if (group.latestCall.name.isNullOrBlank()) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                IconButton(
+                    onClick = { com.evodart.glyphdial.utils.ContactIntents.createContact(context, group.number) },
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Filled.PersonAdd,
+                        contentDescription = "Add Contact",
+                        tint = NothingColors.SilverGray,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
             }
             
             // Call button

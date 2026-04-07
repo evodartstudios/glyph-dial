@@ -147,13 +147,51 @@ fun GlyphDialContent(
         if (needed.isNotEmpty()) permissionLauncher.launch(needed.toTypedArray())
     }
     
-    val dualSimEnabled = false
+    val telecomManager = remember { context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager }
+    var phoneAccounts by remember { mutableStateOf<List<android.telecom.PhoneAccountHandle>>(emptyList()) }
+    var dualSimEnabled by remember { mutableStateOf(false) }
+    var sim1Name by remember { mutableStateOf("SIM 1") }
+    var sim2Name by remember { mutableStateOf("SIM 2") }
     val simPreference = SimPreference.ALWAYS_ASK
     
-    // Helper function to make call
-    fun makeCall(number: String) {
+    LaunchedEffect(hasPhonePermission) {
+        if (hasPhonePermission) {
+            try {
+                @Suppress("MissingPermission")
+                val accounts = telecomManager.callCapablePhoneAccounts
+                phoneAccounts = accounts
+                if (accounts.size > 1) {
+                    dualSimEnabled = true
+                    val acc1 = telecomManager.getPhoneAccount(accounts[0])
+                    val acc2 = telecomManager.getPhoneAccount(accounts[1])
+                    sim1Name = acc1?.label?.toString() ?: "SIM 1"
+                    sim2Name = acc2?.label?.toString() ?: "SIM 2"
+                }
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+    }
+    
+    // Helper function to make call (emergency-aware)
+    fun makeCall(number: String, simSlot: Int? = null) {
+        // Emergency numbers MUST route via system, not our dialer
+        if (com.evodart.glyphdial.utils.EmergencyNumbers.isEmergencyNumber(number)) {
+            val emergencyIntent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))
+            try { context.startActivity(emergencyIntent) } catch (_: Exception) {}
+            return
+        }
+
         val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))
-        context.startActivity(intent)
+        if (simSlot != null && simSlot < phoneAccounts.size) {
+            intent.putExtra(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccounts[simSlot])
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: SecurityException) {
+            val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number"))
+            context.startActivity(dialIntent)
+        }
     }
     
     // Helper function to send SMS
@@ -171,8 +209,8 @@ fun GlyphDialContent(
                 defaultDialerLauncher.launch(intent)
             }
         } else {
-            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            if (context.packageName != telecomManager.defaultDialerPackage) {
+            val tm = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            if (context.packageName != tm.defaultDialerPackage) {
                 val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
                     .putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
                 context.startActivity(intent)
@@ -194,11 +232,14 @@ fun GlyphDialContent(
         ) { route ->
             when (route) {
                 "dial" -> DialPadScreen(
+                    modifier = Modifier.fillMaxSize(),
                     dualSimEnabled = dualSimEnabled,
                     simPreference = simPreference,
+                    sim1Name = sim1Name,
+                    sim2Name = sim2Name,
                     t9Suggestions = t9Suggestions,
                     onSearchQueryChange = { dialerViewModel.updateSearchQuery(it) },
-                    modifier = Modifier.fillMaxSize()
+                    onCall = { number, slot -> makeCall(number, slot) }
                 )
                 "recents" -> {
                     if (!hasCallLogPermission) {
@@ -214,6 +255,10 @@ fun GlyphDialContent(
                             calls = recentCalls,
                             onCallClick = { call -> selectedCall = call },
                             onRedialClick = { number -> makeCall(number) },
+                            onDeleteGroup = { group ->
+                                group.calls.forEach { callLogViewModel.deleteEntry(it.id) }
+                            },
+                            onClearAll = { callLogViewModel.clearAll() },
                             isLoading = callLogLoading
                         )
                     }
@@ -255,17 +300,25 @@ fun GlyphDialContent(
                         )
                     }
                 }
-                "settings" -> SettingsScreen(
-                    defaultStartPage = defaultStartPage,
-                    scrollbarPosition = scrollbarPosition,
-                    showRecommendations = showRecommendations,
-                    accentColor = accentColor,
-                    onDefaultStartPageChange = { page -> settingsViewModel.setDefaultStartPage(page) },
-                    onScrollbarPositionChange = { pos -> settingsViewModel.setScrollbarPosition(pos) },
-                    onShowRecommendationsChange = { show -> settingsViewModel.setShowRecommendations(show) },
-                    onAccentColorChange = { color -> settingsViewModel.setAccentColor(color) },
-                    onSetDefaultDialerClick = { requestDefaultDialer() }
-                )
+                "settings" -> {
+                    val defaultSimSlot by settingsViewModel.defaultSimSlot.collectAsState()
+                    SettingsScreen(
+                        defaultStartPage = defaultStartPage,
+                        scrollbarPosition = scrollbarPosition,
+                        showRecommendations = showRecommendations,
+                        accentColor = accentColor,
+                        defaultSimSlot = defaultSimSlot,
+                        dualSimEnabled = dualSimEnabled,
+                        sim1Name = sim1Name,
+                        sim2Name = sim2Name,
+                        onDefaultStartPageChange = { page -> settingsViewModel.setDefaultStartPage(page) },
+                        onScrollbarPositionChange = { pos -> settingsViewModel.setScrollbarPosition(pos) },
+                        onShowRecommendationsChange = { show -> settingsViewModel.setShowRecommendations(show) },
+                        onAccentColorChange = { color -> settingsViewModel.setAccentColor(color) },
+                        onSetDefaultDialerClick = { requestDefaultDialer() },
+                        onDefaultSimSlotChange = { slot -> settingsViewModel.setDefaultSimSlot(slot) }
+                    )
+                }
             }
         }
         
@@ -282,15 +335,28 @@ fun GlyphDialContent(
             exit = slideOutHorizontally(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate)) { it } + fadeOut(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs)) + scaleOut(targetScale = 0.95f, animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate))
         ) {
             selectedContact?.let { contact ->
+                val contactHistory = recentCalls.filter { call -> 
+                    contact.phoneNumbers.any { it.number == call.number } 
+                }
                 ContactDetailScreen(
                     contact = contact,
+                    history = contactHistory,
                     onBackClick = { selectedContact = null },
                     onCallClick = { number -> makeCall(number) },
                     onSmsClick = { number -> sendSms(number) },
-                    onFavoriteToggle = { /* TODO: toggle favorite */ },
-                    onEditClick = { /* TODO: edit contact */ },
-                    onShareClick = { /* TODO: share contact */ },
-                    onDeleteClick = { /* TODO: delete contact */ }
+                    onFavoriteToggle = {
+                        // Bridge to system contacts — in-app favorite toggle is a roadmap item
+                        com.evodart.glyphdial.utils.ContactIntents.openContact(context, contact)
+                    },
+                    onEditClick = {
+                        com.evodart.glyphdial.utils.ContactIntents.editContact(context, contact)
+                    },
+                    onShareClick = {
+                        com.evodart.glyphdial.utils.ContactIntents.shareContact(context, contact)
+                    },
+                    onDeleteClick = {
+                        com.evodart.glyphdial.utils.ContactIntents.openContact(context, contact)
+                    }
                 )
             }
         }
@@ -302,13 +368,25 @@ fun GlyphDialContent(
             exit = slideOutHorizontally(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate)) { it } + fadeOut(animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs)) + scaleOut(targetScale = 0.95f, animationSpec = tween(NothingMotion.CallAnimations.declineImplodeDurationMs, easing = NothingMotion.Easing.emphasizedAccelerate))
         ) {
             selectedCall?.let { call ->
+                val callHistory = recentCalls.filter { it.number == call.number }
                 CallDetailScreen(
                     call = call,
+                    history = callHistory,
                     onBackClick = { selectedCall = null },
                     onCallClick = { makeCall(call.number) },
                     onSmsClick = { sendSms(call.number) },
-                    onAddToContactsClick = { /* TODO: add to contacts */ },
-                    onBlockClick = { /* TODO: block number */ }
+                    onAddToContactsClick = {
+                        com.evodart.glyphdial.utils.ContactIntents.createContact(context, call.number)
+                    },
+                    onBlockClick = {
+                        // Opens the system call-log detail for this number where the block option lives
+                        val blockIntent = Intent(Intent.ACTION_VIEW).apply {
+                            data = android.net.Uri.parse("tel:${call.number}")
+                        }
+                        if (blockIntent.resolveActivity(context.packageManager) != null) {
+                            context.startActivity(blockIntent)
+                        }
+                    }
                 )
             }
         }

@@ -56,4 +56,12 @@ class CallLogViewModel @Inject constructor(
                 }
         }
     }
+
+    fun deleteEntry(id: Long) {
+        viewModelScope.launch { callLogRepository.deleteEntry(id) }
+    }
+
+    fun clearAll() {
+        viewModelScope.launch { callLogRepository.clearAll() }
+    }
 }

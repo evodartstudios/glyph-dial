@@ -38,6 +38,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun CallDetailScreen(
     call: CallLogEntry,
+    history: List<CallLogEntry> = emptyList(),
     onBackClick: () -> Unit,
     onCallClick: () -> Unit,
     onSmsClick: () -> Unit,
@@ -156,9 +157,9 @@ fun CallDetailScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Call details
+            // Call history
             Text(
-                text = "CALL DETAILS",
+                text = "CALL HISTORY",
                 style = MaterialTheme.typography.labelMedium,
                 color = NothingColors.SilverGray,
                 letterSpacing = 1.sp,
@@ -170,34 +171,76 @@ fun CallDetailScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(NothingColors.SurfaceCard)
-                    .padding(16.dp)
             ) {
-                // Call type
-                DetailRow(
-                    icon = getCallTypeIcon(call.type),
-                    iconTint = callColor,
-                    label = "Type",
-                    value = call.type.name.lowercase().replaceFirstChar { it.uppercase() }
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Date & Time
-                DetailRow(
-                    icon = Icons.Filled.Schedule,
-                    label = "Date & Time",
-                    value = call.timestamp.atZone(java.time.ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a"))
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Duration
-                DetailRow(
-                    icon = Icons.Filled.Timer,
-                    label = "Duration",
-                    value = if (call.duration > 0) call.formattedDuration else "Not answered"
-                )
+                if (history.isEmpty()) {
+                    // Fallback to single call details if history is unavailable
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        DetailRow(
+                            icon = getCallTypeIcon(call.type),
+                            iconTint = callColor,
+                            label = "Type",
+                            value = call.type.name.lowercase().replaceFirstChar { it.uppercase() }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        DetailRow(
+                            icon = Icons.Filled.Schedule,
+                            label = "Date & Time",
+                            value = call.timestamp.atZone(java.time.ZoneId.systemDefault())
+                                .format(DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a"))
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        DetailRow(
+                            icon = Icons.Filled.Timer,
+                            label = "Duration",
+                            value = if (call.duration > 0) call.formattedDuration else "Not answered"
+                        )
+                    }
+                } else {
+                    // Render all calls
+                    history.forEachIndexed { index, historyCall ->
+                        val historyCallColor = when (historyCall.type) {
+                            CallType.MISSED -> NothingColors.NothingRed
+                            CallType.REJECTED -> NothingColors.Warning
+                            else -> NothingColors.CallGreen
+                        }
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = getCallTypeIcon(historyCall.type),
+                                contentDescription = null,
+                                tint = historyCallColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    text = historyCall.type.name.lowercase().replaceFirstChar { it.uppercase() },
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = NothingColors.PureWhite
+                                )
+                                Text(
+                                    text = historyCall.timestamp.atZone(java.time.ZoneId.systemDefault())
+                                        .format(DateTimeFormatter.ofPattern("MMM d, h:mm a")) + 
+                                        if (historyCall.duration > 0) " · ${historyCall.formattedDuration}" else "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = NothingColors.SilverGray
+                                )
+                            }
+                        }
+                        
+                        if (index < history.size - 1) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = NothingColors.DarkGray.copy(alpha = 0.3f)
+                            )
+                        }
+                    }
+                }
             }
         }
     }

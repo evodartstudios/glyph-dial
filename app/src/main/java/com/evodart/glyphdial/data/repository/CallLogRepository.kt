@@ -188,11 +188,56 @@ class CallLogRepository @Inject constructor(
         return when (type) {
             CallLog.Calls.INCOMING_TYPE -> CallType.INCOMING
             CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
-            CallLog.Calls.MISSED_TYPE -> CallType.MISSED
+            CallLog.Calls.MISSED_TYPE   -> CallType.MISSED
             CallLog.Calls.REJECTED_TYPE -> CallType.REJECTED
-            CallLog.Calls.BLOCKED_TYPE -> CallType.BLOCKED
-            CallLog.Calls.VOICEMAIL_TYPE -> CallType.VOICEMAIL
+            CallLog.Calls.BLOCKED_TYPE  -> CallType.BLOCKED
+            CallLog.Calls.VOICEMAIL_TYPE-> CallType.VOICEMAIL
             else -> CallType.INCOMING
+        }
+    }
+
+    /**
+     * Delete a single call log entry by its ID.
+     */
+    suspend fun deleteEntry(id: Long) = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            contentResolver.delete(
+                CallLog.Calls.CONTENT_URI,
+                "${CallLog.Calls._ID} = ?",
+                arrayOf(id.toString())
+            )
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied deleting call log entry", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting call log entry", e)
+        }
+    }
+
+    /**
+     * Delete all call log entries for a given number.
+     */
+    suspend fun deleteByNumber(number: String) = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            contentResolver.delete(
+                CallLog.Calls.CONTENT_URI,
+                "${CallLog.Calls.NUMBER} = ?",
+                arrayOf(number)
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting call log for number", e)
+        }
+    }
+
+    /**
+     * Clear the entire call log.
+     */
+    suspend fun clearAll() = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            contentResolver.delete(CallLog.Calls.CONTENT_URI, null, null)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied clearing call log", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing call log", e)
         }
     }
 }

@@ -3,12 +3,17 @@ package com.evodart.glyphdial.ui.screens.dialpad
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.telecom.TelecomManager
 import com.evodart.glyphdial.ui.components.animation.nothingClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PersonAdd
+import com.evodart.glyphdial.utils.ContactIntents
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,17 +44,26 @@ fun DialPadScreen(
     sim1Name: String = "SIM 1",
     sim2Name: String = "SIM 2",
     t9Suggestions: List<Contact> = emptyList(),
-    onSearchQueryChange: (String) -> Unit = {}
+    onSearchQueryChange: (String) -> Unit = {},
+    onCall: (String, Int?) -> Unit
 ) {
     val context = LocalContext.current
-    
+
     var phoneNumber by remember { mutableStateOf("") }
-    
+
     // Update search query when number changes
     LaunchedEffect(phoneNumber) {
         onSearchQueryChange(phoneNumber)
     }
-    
+
+    // Whether the typed number is already an exact contact match
+    val isExactContactMatch = remember(phoneNumber, t9Suggestions) {
+        phoneNumber.length >= 3 && t9Suggestions.any { contact ->
+            contact.phoneNumbers.any { p -> p.number.filter { it.isDigit() } == phoneNumber.filter { it.isDigit() } }
+        }
+    }
+    val showAddContact = phoneNumber.length >= 3 && !isExactContactMatch
+
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -78,16 +92,35 @@ fun DialPadScreen(
                             .fillMaxWidth()
                     )
                 } else {
-                    // No matches found
+                    // No matches - prompt to add contact (handled by persistent chip below)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
+            // Persistent "Add to Contacts" chip (shows whenever number has no exact contact match)
+            if (showAddContact) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { ContactIntents.createContact(context, phoneNumber) }
+                        .padding(vertical = 10.dp, horizontal = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PersonAdd,
+                        contentDescription = "Add ${phoneNumber} to contacts",
+                        tint = NothingColors.NothingRed,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = "No contacts found",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = NothingColors.SilverGray,
-                        modifier = Modifier.padding(vertical = 12.dp)
+                        text = "Add to contacts",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = NothingColors.NothingRed
                     )
                 }
             }
-            
+
             // Phone number display
             PhoneNumberDisplay(
                 number = phoneNumber,
@@ -107,6 +140,14 @@ fun DialPadScreen(
             onDigitLongPressed = { digit ->
                 when (digit) {
                     '0' -> phoneNumber += '+'
+                    '1' -> {
+                        // Long-press 1 = voicemail speed-dial via system intent
+                        val voicemailUri = android.net.Uri.parse("voicemail:")
+                        val intent = android.content.Intent(android.content.Intent.ACTION_DIAL, voicemailUri)
+                        if (intent.resolveActivity(context.packageManager) != null) {
+                            context.startActivity(intent)
+                        }
+                    }
                     else -> phoneNumber += digit
                 }
             },
@@ -119,7 +160,7 @@ fun DialPadScreen(
         CallActionBar(
             number = phoneNumber,
             onCall = { simSlot ->
-                makeCall(context, phoneNumber, simSlot)
+                onCall(phoneNumber, simSlot)
             },
             onBackspace = {
                 if (phoneNumber.isNotEmpty()) {
@@ -200,26 +241,5 @@ private fun T9SuggestionsList(
                 )
             }
         }
-    }
-}
-
-private fun makeCall(context: Context, phoneNumber: String, simSlot: Int?) {
-    if (phoneNumber.isEmpty()) return
-    
-    val intent = Intent(Intent.ACTION_CALL).apply {
-        data = Uri.parse("tel:$phoneNumber")
-        simSlot?.let { slot ->
-            putExtra("com.android.phone.extra.slot", slot)
-            putExtra("simSlot", slot)
-        }
-    }
-    
-    try {
-        context.startActivity(intent)
-    } catch (e: SecurityException) {
-        val dialIntent = Intent(Intent.ACTION_DIAL).apply {
-            data = Uri.parse("tel:$phoneNumber")
-        }
-        context.startActivity(dialIntent)
     }
 }

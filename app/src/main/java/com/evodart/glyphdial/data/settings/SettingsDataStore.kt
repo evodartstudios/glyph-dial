@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -24,10 +25,11 @@ class SettingsDataStore @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
     private object Keys {
-        val DEFAULT_START_PAGE = stringPreferencesKey("default_start_page")
-        val SCROLLBAR_POSITION = stringPreferencesKey("scrollbar_position")
+        val DEFAULT_START_PAGE    = stringPreferencesKey("default_start_page")
+        val SCROLLBAR_POSITION   = stringPreferencesKey("scrollbar_position")
         val SHOW_RECOMMENDATIONS = booleanPreferencesKey("show_recommendations")
-        val ACCENT_COLOR = stringPreferencesKey("accent_color")
+        val ACCENT_COLOR         = stringPreferencesKey("accent_color")
+        val DEFAULT_SIM_SLOT     = intPreferencesKey("default_sim_slot")  // -1 = always ask
     }
     
     // Default start page
@@ -75,6 +77,17 @@ class SettingsDataStore @Inject constructor(
     suspend fun setAccentColor(color: AccentColor) {
         context.dataStore.edit { prefs ->
             prefs[Keys.ACCENT_COLOR] = color.name.lowercase()
+        }
+    }
+
+    // Default SIM slot (-1 = always ask, 0 = SIM 1, 1 = SIM 2)
+    val defaultSimSlot: Flow<Int> = context.dataStore.data.map { prefs ->
+        prefs[Keys.DEFAULT_SIM_SLOT] ?: -1
+    }
+
+    suspend fun setDefaultSimSlot(slot: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.DEFAULT_SIM_SLOT] = slot
         }
     }
 }

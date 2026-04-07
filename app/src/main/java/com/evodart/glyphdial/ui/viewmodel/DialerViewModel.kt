@@ -30,6 +30,8 @@ class DialerViewModel @Inject constructor(
     private val _t9Suggestions = MutableStateFlow<List<Contact>>(emptyList())
     val t9Suggestions: StateFlow<List<Contact>> = _t9Suggestions.asStateFlow()
 
+    private val t9Trie = com.evodart.glyphdial.utils.T9Trie()
+
     // Cache contacts for fast T9 search
     private var cachedContacts = emptyList<Contact>()
 
@@ -41,6 +43,14 @@ class DialerViewModel @Inject constructor(
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
                 contactRepository.getAllContacts().collect { list ->
                     cachedContacts = list
+                    // Build T9 index asynchronously
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                        t9Trie.build(list)
+                        // Update suggestions if a query is active
+                        if (_searchQuery.value.isNotEmpty()) {
+                            _t9Suggestions.value = t9Trie.search(_searchQuery.value).take(5)
+                        }
+                    }
                 }
             }
         }
@@ -62,32 +72,11 @@ class DialerViewModel @Inject constructor(
 
         viewModelScope.launch {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-                val filtered = cachedContacts.filter { contact ->
-                    contact.phoneNumbers.any { phone ->
-                        phone.number.filter { it.isDigit() }.contains(query.filter { it.isDigit() })
-                    } || matchesT9(contact.name, query)
-                }.take(5)
-                _t9Suggestions.value = filtered
+                val results = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    t9Trie.search(query).take(5)
+                }
+                _t9Suggestions.value = results
             }
         }
-    }
-
-    private fun matchesT9(name: String, digits: String): Boolean {
-        val t9Map = mapOf(
-            '2' to "abc", '3' to "def", '4' to "ghi", '5' to "jkl",
-            '6' to "mno", '7' to "pqrs", '8' to "tuv", '9' to "wxyz"
-        )
-
-        val nameLower = name.lowercase().filter { it.isLetter() }
-        if (nameLower.length < digits.length) return false
-
-        for (i in digits.indices) {
-            val digit = digits[i]
-            val letters = t9Map[digit] ?: return false
-            if (i >= nameLower.length || !letters.contains(nameLower[i])) {
-                return false
-            }
-        }
-        return true
     }
 }

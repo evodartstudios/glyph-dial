@@ -42,11 +42,16 @@ fun SettingsScreen(
     scrollbarPosition: ScrollbarPosition,
     showRecommendations: Boolean,
     accentColor: AccentColor,
+    defaultSimSlot: Int = -1,
+    dualSimEnabled: Boolean = false,
+    sim1Name: String = "SIM 1",
+    sim2Name: String = "SIM 2",
     onDefaultStartPageChange: (String) -> Unit,
     onScrollbarPositionChange: (ScrollbarPosition) -> Unit,
     onShowRecommendationsChange: (Boolean) -> Unit,
     onAccentColorChange: (AccentColor) -> Unit,
     onSetDefaultDialerClick: () -> Unit,
+    onDefaultSimSlotChange: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var currentScreen by remember { mutableStateOf<SettingsSubScreen?>(null) }
@@ -115,6 +120,11 @@ fun SettingsScreen(
             exit = slideOutHorizontally { it } + fadeOut()
         ) {
             CallsSettingsScreen(
+                defaultSimSlot = defaultSimSlot,
+                dualSimEnabled = dualSimEnabled,
+                sim1Name = sim1Name,
+                sim2Name = sim2Name,
+                onDefaultSimSlotChange = onDefaultSimSlotChange,
                 onBack = { currentScreen = null }
             )
         }
@@ -489,10 +499,16 @@ private fun SearchSettingsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CallsSettingsScreen(
+    defaultSimSlot: Int = -1,
+    dualSimEnabled: Boolean = false,
+    sim1Name: String = "SIM 1",
+    sim2Name: String = "SIM 2",
+    onDefaultSimSlotChange: (Int) -> Unit = {},
     onBack: () -> Unit
 ) {
     val accent = LocalAccentColor.current
-    
+    var showSimPicker by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -507,41 +523,61 @@ private fun CallsSettingsScreen(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = NothingColors.PureBlack)
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
+            // SIM preference (only on dual-SIM devices)
+            if (dualSimEnabled) {
+                SettingsSection(title = "Dual SIM", accentColor = accent) {
+                    val simLabel = when (defaultSimSlot) {
+                        0    -> sim1Name
+                        1    -> sim2Name
+                        else -> "Always ask"
+                    }
+                    SettingsToggleRow(
+                        icon = Icons.Filled.SimCard,
+                        title = "Default SIM for calls",
+                        subtitle = "Which SIM to use when dialing",
+                        value = simLabel,
+                        onClick = { showSimPicker = true },
+                        accentColor = accent
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
             SettingsSection(title = "Speed Dial", accentColor = accent) {
                 SettingsInfoItem(
                     icon = Icons.Filled.Speed,
                     title = "Configure Speed Dial",
                     subtitle = "Long-press numbers 2-9 (Coming soon)",
                     trailing = {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, 
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
                             tint = NothingColors.SilverGray, modifier = Modifier.size(20.dp))
                     }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             SettingsSection(title = "Blocking", accentColor = accent) {
                 SettingsInfoItem(
                     icon = Icons.Filled.Block,
                     title = "Blocked Numbers",
                     subtitle = "Manage blocked callers (Coming soon)",
                     trailing = {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, 
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
                             tint = NothingColors.SilverGray, modifier = Modifier.size(20.dp))
                     }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             SettingsSection(title = "Call Options", accentColor = accent) {
                 SettingsInfoItem(
                     icon = Icons.Filled.Vibration,
@@ -556,6 +592,52 @@ private fun CallsSettingsScreen(
                     subtitle = "Auto-record calls (Coming soon)",
                     trailing = { Text("Off", color = NothingColors.SilverGray) }
                 )
+            }
+        }
+    }
+
+    // SIM picker bottom sheet
+    if (showSimPicker) {
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = { showSimPicker = false },
+            containerColor = NothingColors.CharcoalBlack
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    "Default SIM for calls",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = NothingColors.PureWhite,
+                    fontWeight = FontWeight.Bold,
+                    modifier = androidx.compose.ui.Modifier.padding(bottom = 12.dp)
+                )
+                listOf(
+                    -1 to "Always ask",
+                    0  to sim1Name,
+                    1  to sim2Name
+                ).forEach { (slot, label) ->
+                    TextButton(
+                        onClick = { onDefaultSimSlotChange(slot); showSimPicker = false },
+                        modifier = androidx.compose.ui.Modifier.fillMaxWidth()
+                    ) {
+                        if (slot == defaultSimSlot) {
+                            Icon(Icons.Filled.Check, null, tint = accent,
+                                modifier = androidx.compose.ui.Modifier.size(18.dp))
+                            Spacer(androidx.compose.ui.Modifier.width(8.dp))
+                        } else {
+                            Spacer(androidx.compose.ui.Modifier.width(26.dp))
+                        }
+                        Text(
+                            label,
+                            color = if (slot == defaultSimSlot) accent else NothingColors.PureWhite,
+                            modifier = androidx.compose.ui.Modifier.weight(1f)
+                        )
+                    }
+                }
             }
         }
     }

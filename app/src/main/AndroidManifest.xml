@@ -121,6 +121,9 @@
                 <action android:name="com.evodart.glyphdial.ACTION_ANSWER" />
                 <action android:name="com.evodart.glyphdial.ACTION_DECLINE" />
                 <action android:name="com.evodart.glyphdial.ACTION_HANG_UP" />
+                <action android:name="com.evodart.glyphdial.ACTION_MUTE" />
+                <action android:name="com.evodart.glyphdial.ACTION_SPEAKER" />
+                <action android:name="com.evodart.glyphdial.ACTION_MERGE" />
             </intent-filter>
         </receiver>
 

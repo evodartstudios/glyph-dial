@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -178,6 +179,22 @@ fun ContactsScreen(
                         )
                     }
                 }
+            }
+            // FAB for Adding Contacts
+            val context = androidx.compose.ui.platform.LocalContext.current
+            FloatingActionButton(
+                onClick = { com.evodart.glyphdial.utils.ContactIntents.createContact(context) },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 24.dp),
+                containerColor = NothingColors.NothingRed,
+                contentColor = NothingColors.PureWhite,
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Filled.Add,
+                    contentDescription = "Add Contact"
+                )
             }
         }
     }
