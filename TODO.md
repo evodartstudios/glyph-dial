@@ -1,4 +1,4 @@
-# 📌 Nothing Dialer — Roadmap & TODO
+# 📌 Glyph Dial — Roadmap & TODO
 
 The core dialer is **production-ready** as of v1.0. The items below are stretch goals and community contributions we'd love to see.
 

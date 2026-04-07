@@ -1,6 +1,6 @@
-# Contributing to Nothing Dialer
+# Contributing to Glyph Dial
 
-First off, thank you for considering contributing to Nothing Dialer! It's people like you that make the open source community such a fantastic place to learn, inspire, and create. This is EvoDART's first major open source push!
+First off, thank you for considering contributing to Glyph Dial! It's people like you that make the open source community such a fantastic place to learn, inspire, and create. This is EvoDART's first major open source push!
 
 ## How can I contribute?
 

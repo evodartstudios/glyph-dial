@@ -1,17 +1,41 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/evodart/Nothing-Dialer/main/app/src/main/ic_launcher-playstore.png" width="128" height="128" />
-  <h1>Nothing Dialer</h1>
+  <img src="./app/src/main/ic_launcher-playstore.png" width="128" height="128" />
+  <h1>Glyph Dial</h1>
   <p>Minimalist, open-source Android dialer inspired by <a href="https://nothing.tech">Nothing</a> OS aesthetics.</p>
   <p><b>By EvoDART Studios</b></p>
 
-  <img src="https://img.shields.io/badge/Platform-Android%209%2B-3DDC84?style=flat-square&logo=android&logoColor=white" />
+  <img src="https://img.shields.io/badge/Platform-Android%208%2B-3DDC84?style=flat-square&logo=android&logoColor=white" />
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white" />
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=flat-square&logo=android&logoColor=white" />
   <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square" />
   <br /><br />
+  <a href="https://github.com/evodartstudios/glyph-dial/releases/latest">
+    <img src="https://img.shields.io/github/v/release/evodartstudios/glyph-dial?style=for-the-badge&logo=android&logoColor=white&label=Download%20APK&color=3DDC84" alt="Download Latest APK" />
+  </a>
+  <br /><br />
 </div>
 
-> **Nothing Dialer** is EvoDART's first official open-source project — a community-driven, fully functional replacement for the stock Android phone app, built entirely with Jetpack Compose.
+> **Glyph Dial** is EvoDART's first official open-source project — a community-driven, fully functional replacement for the stock Android phone app, built entirely with Jetpack Compose.
+
+---
+
+## 📲 Download
+
+**Non-developer? No problem.** Just grab the latest APK directly:
+
+👉 **[Download Latest APK](https://github.com/evodartstudios/glyph-dial/releases/latest)** — no Android Studio or build tools needed.
+
+<details>
+<summary>📋 Install Instructions (click to expand)</summary>
+
+1. Download the `.apk` file from the link above
+2. On your Android device, go to **Settings → Security → Install unknown apps** and allow your browser or file manager
+3. Open the downloaded APK and tap **Install**
+4. On first launch, grant the requested permissions and set Glyph Dial as your **Default Phone App** when prompted
+
+> ⚠️ **Requires Android 8.0 (Oreo) or higher.**
+
+</details>
 
 ---
 
@@ -45,7 +69,7 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/evodart/Nothing-Dialer.git
+git clone https://github.com/evodartstudios/glyph-dial.git
 
 # 2. Open in Android Studio → File → Open
 # 3. Sync Gradle
@@ -68,8 +92,8 @@ This is a community project — contributions are very welcome!
 
 ## 🌐 Connect
 
-- 📸 **Instagram:** [@EvoDART.Studios](https://instagram.com/EvoDART.Studios)
-- 💼 **LinkedIn:** [EvoDART Studios](https://linkedin.com/company/evodart)
+- 📸 **Instagram:** [@EvoDART.Studios](https://www.instagram.com/evodart.studios/)
+- 💼 **LinkedIn:** [EvoDART Studios](https://www.linkedin.com/company/evodartstudios)
 
 ## ❤️ Support
 
@@ -77,7 +101,10 @@ Open-source development takes time. If you find this project useful, consider su
 
 **Crypto (EvoDART):**
 ```
-[YOUR_WALLET_ADDRESS_HERE]
+ETH:     0xfe828D9Bb46C50fe4532edeD069f5ef77f28D9a3
+BTC:     bc1qejsmtwsapvuntq33lth2ucph3lyk6evxazfesc
+SOL:     9qWZx8jennxCwhgsnE4P4oFu1Wwrgdam53EhzWNdsMc7
+TRON:    TG9yZ6osoTM1Ym2RdHRfjgnJYRb6Y4Zx9c
 ```
 
 ---
