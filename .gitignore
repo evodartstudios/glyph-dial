@@ -1,0 +1,36 @@
+# ── Build outputs ────────────────────────────────────────────────────────────
+/build/
+app/build/
+*.iml
+
+# ── Gradle ────────────────────────────────────────────────────────────────────
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+
+# ── Local secrets / env ───────────────────────────────────────────────────────
+local.properties
+keystore.properties
+*.keystore
+*.jks
+
+# ── Android Studio / IntelliJ IDEA ───────────────────────────────────────────
+.idea/
+*.xml
+!app/src/main/res/**/*.xml
+!app/src/main/AndroidManifest.xml
+.DS_Store
+captures/
+
+# ── Kotlin ────────────────────────────────────────────────────────────────────
+.kotlin/
+
+# ── External native build ─────────────────────────────────────────────────────
+.externalNativeBuild/
+.cxx/
+
+# ── Bundled font assets (keep extracted, not the zip) ────────────────────────
+nothingfont-main.zip
+
+# ── OS generated ─────────────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
