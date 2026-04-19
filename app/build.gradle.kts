@@ -5,6 +5,17 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// ── Signing helpers ────────────────────────────────────────────────────────────
+// In CI/CD: KEYSTORE_PATH points to the decoded .jks file (decoded by the workflow);
+// KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD are GitHub secrets.
+// Locally: falls back to the Android debug keystore (zero config needed).
+val ksPath:     String? = System.getenv("KEYSTORE_PATH")
+val ksPassword: String  = System.getenv("KEYSTORE_PASSWORD") ?: "android"
+val ksAlias:    String  = System.getenv("KEY_ALIAS")         ?: "androiddebugkey"
+val ksKeyPwd:   String  = System.getenv("KEY_PASSWORD")      ?: "android"
+val ksFile: java.io.File = if (ksPath != null) file(ksPath)
+    else file("${System.getProperty("user.home")}/.android/debug.keystore")
+
 android {
     namespace = "com.evodart.glyphdial"
     compileSdk = 36
@@ -13,8 +24,8 @@ android {
         applicationId = "com.evodart.glyphdial"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -23,10 +34,21 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile     = ksFile
+            storePassword = ksPassword
+            keyAlias      = ksAlias
+            keyPassword   = ksKeyPwd
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled   = true
             isShrinkResources = true
+            signingConfig     = signingConfigs.getByName("release")
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

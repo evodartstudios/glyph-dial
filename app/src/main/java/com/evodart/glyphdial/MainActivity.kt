@@ -58,6 +58,7 @@ import com.evodart.glyphdial.ui.viewmodel.ContactsViewModel
 import com.evodart.glyphdial.ui.viewmodel.DialerViewModel
 import com.evodart.glyphdial.ui.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -101,11 +102,13 @@ fun GlyphDialContent(
     
     // Pager state with default from settings
     val pagerState = rememberAppPagerState(defaultStartPage)
+    val coroutineScope = rememberCoroutineScope()
     
     // Contact state
     val contacts by contactsViewModel.contacts.collectAsState()
     val contactsLoading by contactsViewModel.isLoading.collectAsState()
     val hasContactsPermission by contactsViewModel.hasPermission.collectAsState()
+    val starredContacts by contactsViewModel.starredContacts.collectAsState()
     
     // CallLog state
     val recentCalls by callLogViewModel.recentCalls.collectAsState()
@@ -293,10 +296,17 @@ fun GlyphDialContent(
                         )
                     } else {
                         FavoritesScreen(
-                            contacts = contactsViewModel.getStarredContacts(),
+                            contacts = starredContacts,
                             onContactClick = { contact -> selectedContact = contact },
                             onCallClick = { number -> makeCall(number) },
-                            isLoading = contactsLoading
+                            isLoading = contactsLoading,
+                            onAddFavoritesClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(
+                                        SwipeablePages.getPageIndex("contacts")
+                                    )
+                                }
+                            }
                         )
                     }
                 }

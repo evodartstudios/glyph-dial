@@ -649,7 +649,9 @@ private fun AboutScreen(
     onBack: () -> Unit
 ) {
     val accent = LocalAccentColor.current
-    
+    var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -664,7 +666,7 @@ private fun AboutScreen(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = NothingColors.PureBlack)
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -707,9 +709,9 @@ private fun AboutScreen(
                     color = NothingColors.SilverGray
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             SettingsSection(title = "Information", accentColor = accent) {
                 InfoRow(icon = Icons.Filled.Code, title = "Developer", value = "EvoDart")
                 SettingsDivider()
@@ -717,33 +719,172 @@ private fun AboutScreen(
                 SettingsDivider()
                 InfoRow(icon = Icons.Filled.Android, title = "Platform", value = "Android 12+")
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             SettingsSection(title = "Links", accentColor = accent) {
-                SettingsInfoItem(
+                SettingsNavItem(
                     icon = Icons.Filled.Description,
                     title = "Privacy Policy",
-                    subtitle = "View privacy information",
-                    trailing = {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, 
-                            tint = NothingColors.SilverGray, modifier = Modifier.size(20.dp))
-                    }
+                    subtitle = "How we handle your data",
+                    onClick = { showPrivacyDialog = true }
                 )
                 SettingsDivider()
-                SettingsInfoItem(
+                SettingsNavItem(
                     icon = Icons.Filled.Gavel,
                     title = "Terms of Service",
-                    subtitle = "View terms and conditions",
-                    trailing = {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, 
-                            tint = NothingColors.SilverGray, modifier = Modifier.size(20.dp))
-                    }
+                    subtitle = "Terms and conditions of use",
+                    onClick = { showTermsDialog = true }
                 )
             }
         }
     }
+
+    // Privacy Policy Dialog
+    if (showPrivacyDialog) {
+        AlertDialog(
+            onDismissRequest = { showPrivacyDialog = false },
+            containerColor = NothingColors.CharcoalBlack,
+            title = {
+                Text(
+                    "Privacy Policy",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = NothingColors.PureWhite,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "Last updated: April 2026",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = NothingColors.SilverGray
+                    )
+                    Text(
+                        "GlyphDial is developed by EvoDart as an open-source, privacy-first phone dialer. We are committed to protecting your personal information.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = NothingColors.PureWhite
+                    )
+                    Text(
+                        "Data We Access",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "• Contacts: Read your device contacts to display caller names and enable quick dialing. This data never leaves your device.\n\n" +
+                        "• Call Log: Read and write call history to display recent calls. Stored entirely on-device.\n\n" +
+                        "• Phone State: Detect ongoing calls and manage call audio routing.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NothingColors.SilverGray
+                    )
+                    Text(
+                        "Data We Do NOT Collect",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "We do not collect, transmit, or store any personal data on external servers. GlyphDial has no analytics, no crash reporting services, and no advertising SDKs. All processing happens entirely on your device.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NothingColors.SilverGray
+                    )
+                    Text(
+                        "Contact Us",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "For privacy inquiries, contact us at: privacy@evodart.com",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NothingColors.SilverGray
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPrivacyDialog = false }) {
+                    Text("Close", color = accent)
+                }
+            }
+        )
+    }
+
+    // Terms of Service Dialog
+    if (showTermsDialog) {
+        AlertDialog(
+            onDismissRequest = { showTermsDialog = false },
+            containerColor = NothingColors.CharcoalBlack,
+            title = {
+                Text(
+                    "Terms of Service",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = NothingColors.PureWhite,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "Last updated: April 2026",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = NothingColors.SilverGray
+                    )
+                    Text(
+                        "By using GlyphDial, you agree to the following terms. Please read them carefully.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = NothingColors.PureWhite
+                    )
+                    Text(
+                        "License",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "GlyphDial is provided under the MIT License. You are free to use, modify, and distribute this software in accordance with that license.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NothingColors.SilverGray
+                    )
+                    Text(
+                        "Disclaimer",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "GlyphDial is provided \"as is\" without warranty of any kind. EvoDart is not liable for any issues arising from use of this application, including but not limited to missed calls, data loss, or device compatibility issues.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NothingColors.SilverGray
+                    )
+                    Text(
+                        "Emergency Calls",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "While GlyphDial supports emergency number dialing, always ensure your device is properly configured. In critical situations, use your device's native dialer if GlyphDial is unavailable.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NothingColors.SilverGray
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showTermsDialog = false }) {
+                    Text("Close", color = accent)
+                }
+            }
+        )
+    }
 }
+
 
 // ============ SHARED COMPONENTS ============
 

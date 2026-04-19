@@ -12,6 +12,7 @@ local.properties
 keystore.properties
 *.keystore
 *.jks
+keystore/            # CI-decoded release keystore (never commit)
 
 # ── Android Studio / IntelliJ IDEA ───────────────────────────────────────────
 .idea/

@@ -30,6 +30,14 @@ class ContactsViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /**
+     * Reactive starred contacts — updates in real-time whenever any contact is starred/unstarred.
+     * Derived from the contacts repo's own reactive callbackFlow.
+     */
+    val starredContacts: StateFlow<List<Contact>> = _contacts
+        .map { list -> list.filter { it.starred } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         checkPermission()
     }
@@ -38,7 +46,7 @@ class ContactsViewModel @Inject constructor(
         val granted = ContextCompat.checkSelfPermission(
             context, Manifest.permission.READ_CONTACTS
         ) == PackageManager.PERMISSION_GRANTED
-        
+
         _hasPermission.value = granted
         if (granted) {
             loadContacts()
@@ -57,7 +65,9 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-    fun getStarredContacts(): List<Contact> {
-        return _contacts.value.filter { it.starred }
-    }
+    /**
+     * Returns the current snapshot of starred contacts (non-reactive helper for one-shot use).
+     * Prefer collecting [starredContacts] StateFlow for reactive UI.
+     */
+    fun getStarredContacts(): List<Contact> = _contacts.value.filter { it.starred }
 }

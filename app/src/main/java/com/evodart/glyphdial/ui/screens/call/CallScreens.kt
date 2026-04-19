@@ -448,19 +448,26 @@ private fun ActionButtonsGrid(
             )
         }
 
-        // Row 2: Additional controls
+        // Row 2: Bluetooth (or Merge if possible), Hold, More — always 3 buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            // Merge / Conference button (visible when carrier supports it)
-            if (canMerge || isConference) {
+            // Show Bluetooth normally; if canMerge highlight it as Merge
+            if (canMerge && !isConference) {
                 ActionButton(
                     icon = Icons.Filled.CallMerge,
-                    label = if (isConference) "conference" else "merge",
-                    contentDescription = if (isConference) "Conference call active" else "Merge into conference",
-                    isActive = isConference,
-                    enabled = canMerge || isConference,
+                    label = "merge",
+                    contentDescription = "Merge into conference",
+                    isActive = false,
+                    onClick = onMergeClick
+                )
+            } else if (isConference) {
+                ActionButton(
+                    icon = Icons.Filled.CallMerge,
+                    label = "conf.",
+                    contentDescription = "Conference call active",
+                    isActive = true,
                     onClick = onMergeClick
                 )
             } else {
@@ -642,6 +649,7 @@ fun ActiveCallScreen(
     onMergeClick: () -> Unit = {},
     onHoldToggle: () -> Unit,
     onKeypadClick: () -> Unit,
+    onMoreClick: () -> Unit = {},
     onEndCall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -718,7 +726,8 @@ fun ActiveCallScreen(
                     onSpeakerToggle  = onSpeakerToggle,
                     onHoldToggle     = onHoldToggle,
                     onBluetoothClick = { showRouteSheet = true },
-                    onMergeClick     = onMergeClick
+                    onMergeClick     = onMergeClick,
+                    onMoreClick      = onMoreClick
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -829,34 +838,36 @@ fun IncomingCallScreen(
                 )
             }
 
-            // Decline / Answer
+            // Decline / Answer — with generous spacing
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     FilledIconButton(
                         onClick = onDecline,
-                        modifier = Modifier.size(72.dp),
+                        modifier = Modifier.size(80.dp),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = NothingColors.NothingRed,
                             contentColor   = NothingColors.PureWhite
                         )
-                    ) { Icon(Icons.Filled.CallEnd, "Decline call", Modifier.size(32.dp)) }
-                    Spacer(Modifier.height(8.dp))
+                    ) { Icon(Icons.Filled.CallEnd, "Decline call", Modifier.size(36.dp)) }
+                    Spacer(Modifier.height(12.dp))
                     Text("Decline", style = MaterialTheme.typography.labelMedium, color = NothingColors.SilverGray)
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     FilledIconButton(
                         onClick = onAnswer,
-                        modifier = Modifier.size(72.dp),
+                        modifier = Modifier.size(80.dp),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = NothingColors.CallGreen,
                             contentColor   = NothingColors.PureWhite
                         )
-                    ) { Icon(Icons.Filled.Call, "Answer call", Modifier.size(32.dp)) }
-                    Spacer(Modifier.height(8.dp))
+                    ) { Icon(Icons.Filled.Call, "Answer call", Modifier.size(36.dp)) }
+                    Spacer(Modifier.height(12.dp))
                     Text("Accept", style = MaterialTheme.typography.labelMedium, color = NothingColors.SilverGray)
                 }
             }
@@ -1034,6 +1045,112 @@ fun AudioRouteBottomSheet(
                     Text(label, color = NothingColors.PureWhite,
                         modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
                 }
+            }
+        }
+    }
+}
+
+/**
+ * More call options bottom sheet — shown when the "more" button is tapped during an active call.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MoreOptionsSheet(
+    canMerge: Boolean,
+    isConference: Boolean,
+    callerName: String,
+    onMerge: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = NothingColors.CharcoalBlack
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                "More options",
+                style = MaterialTheme.typography.titleMedium,
+                color = NothingColors.PureWhite,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            if (canMerge && !isConference) {
+                TextButton(
+                    onClick = onMerge,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Filled.CallMerge,
+                        contentDescription = "Merge calls",
+                        tint = NothingColors.PureWhite,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "Merge calls into conference",
+                        color = NothingColors.PureWhite,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Start
+                    )
+                }
+            }
+
+            if (isConference) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.CallMerge,
+                        contentDescription = null,
+                        tint = NothingColors.CallGreen,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            "Conference Call Active",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = NothingColors.PureWhite,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            "With $callerName and others",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = NothingColors.SilverGray
+                        )
+                    }
+                }
+            }
+
+            // Add call — future feature placeholder
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = false
+            ) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = "Add call",
+                    tint = NothingColors.SilverGray,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    "Add call (coming soon)",
+                    color = NothingColors.SilverGray,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Start
+                )
             }
         }
     }

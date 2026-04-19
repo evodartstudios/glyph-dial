@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.evodart.glyphdial.data.model.Contact
 import com.evodart.glyphdial.data.repository.ContactRepository
-import com.evodart.glyphdial.service.AudioRoute
 import com.evodart.glyphdial.service.CallState
 import com.evodart.glyphdial.service.GlyphDialCallService
 import com.evodart.glyphdial.ui.components.dialpad.formatPhoneNumber
@@ -131,10 +130,21 @@ fun InCallContent(
     val audioState     by GlyphDialCallService.audioState.collectAsState()
     val waitingCall    by GlyphDialCallService.waitingCall.collectAsState()
     val waitingState   by GlyphDialCallService.waitingCallState.collectAsState()
+    // Epoch timestamp set by service when call becomes ACTIVE (never reset on hold/unhold)
+    val callStartTime  by GlyphDialCallService.callStartTime.collectAsState()
     val scope          = rememberCoroutineScope()
 
-    // Call duration timer
+    // ── Epoch-based duration: ticks every second, computed from service start time ──
+    // This never resets on HOLDING → ACTIVE transitions because callStartTime stays constant.
     var callDuration by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(callState, callStartTime) {
+        if ((callState == CallState.ACTIVE || callState == CallState.HOLDING) && callStartTime > 0L) {
+            while (true) {
+                callDuration = (System.currentTimeMillis() - callStartTime) / 1000L
+                delay(500L) // Update twice per second for accuracy
+            }
+        }
+    }
 
     // Caller info
     var callerContact  by remember { mutableStateOf<Contact?>(null) }
@@ -155,17 +165,6 @@ fun InCallContent(
 
     LaunchedEffect(waitingCall) {
         waitingNumber = waitingCall?.details?.handle?.schemeSpecificPart ?: ""
-    }
-
-    // Duration counter — resets when call becomes active
-    LaunchedEffect(callState) {
-        if (callState == CallState.ACTIVE) {
-            callDuration = 0
-            while (true) {
-                delay(1000)
-                callDuration++
-            }
-        }
     }
 
     // Finish on disconnect
@@ -195,6 +194,7 @@ fun InCallContent(
 
     // UI state
     var showKeypad   by remember { mutableStateOf(false) }
+    var showMore     by remember { mutableStateOf(false) }
 
     androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
         when (callState) {
@@ -246,6 +246,7 @@ fun InCallContent(
                         else GlyphDialCallService.holdCall()
                     },
                     onKeypadClick    = { showKeypad = !showKeypad },
+                    onMoreClick      = { showMore = true },
                     onEndCall        = { GlyphDialCallService.endCall() },
                     modifier         = Modifier.fillMaxSize()
                 )
@@ -267,13 +268,13 @@ fun InCallContent(
                     onBluetoothClick = {},
                     onHoldToggle     = {},
                     onKeypadClick    = {},
+                    onMoreClick      = {},
                     onEndCall        = {},
                     modifier         = Modifier.fillMaxSize()
                 )
             }
 
             CallState.SELECT_PHONE_ACCOUNT -> {
-                // Show outgoing (dialing) screen while system resolves account
                 OutgoingCallScreen(
                     callerName      = callerName,
                     callerNumber    = callerNumber,
@@ -332,5 +333,16 @@ fun InCallContent(
                 onClose     = { showKeypad = false }
             )
         }
+    }
+
+    // ── More Options Sheet ────────────────────────────────────────────────────
+    if (showMore) {
+        com.evodart.glyphdial.ui.screens.call.MoreOptionsSheet(
+            canMerge     = canMerge,
+            isConference = isConference,
+            callerName   = callerName ?: callerNumber,
+            onMerge      = { GlyphDialCallService.mergeCall(); showMore = false },
+            onDismiss    = { showMore = false }
+        )
     }
 }

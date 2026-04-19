@@ -2,6 +2,10 @@ package com.evodart.glyphdial.data.repository
 
 import android.content.ContentResolver
 import android.content.Context
+import android.database.ContentObserver
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.provider.ContactsContract
 import android.util.Log
 import com.evodart.glyphdial.data.model.Contact
@@ -9,7 +13,9 @@ import com.evodart.glyphdial.data.model.PhoneNumber
 import com.evodart.glyphdial.data.model.PhoneNumberType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
@@ -39,11 +45,24 @@ class ContactRepository @Inject constructor(
     )
 
     /**
-     * Get all contacts with phone numbers using a single query.
-     * Groups phone rows by CONTACT_ID to build Contact objects.
+     * Get all contacts reactively — re-emits whenever the contacts database changes.
      */
-    fun getAllContacts(): Flow<List<Contact>> = flow {
-        try {
+    fun getAllContacts(): Flow<List<Contact>> = callbackFlow {
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                trySend(fetchAllContacts())
+            }
+        }
+        contentResolver.registerContentObserver(
+            ContactsContract.Contacts.CONTENT_URI, true, observer
+        )
+        // Initial load
+        trySend(fetchAllContacts())
+        awaitClose { contentResolver.unregisterContentObserver(observer) }
+    }.flowOn(Dispatchers.IO)
+
+    private fun fetchAllContacts(): List<Contact> {
+        return try {
             val cursor = contentResolver.query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 phoneProjection,
@@ -51,17 +70,15 @@ class ContactRepository @Inject constructor(
                 null,
                 "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME_PRIMARY} ASC"
             )
-
-            val contacts = buildContactsFromPhoneCursor(cursor)
-            emit(contacts)
+            buildContactsFromPhoneCursor(cursor)
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission denied reading contacts", e)
-            emit(emptyList())
+            emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error loading contacts", e)
-            emit(emptyList())
+            emptyList()
         }
-    }.flowOn(Dispatchers.IO)
+    }
 
     /**
      * Search contacts by name or number using a single query.
@@ -94,10 +111,23 @@ class ContactRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     /**
-     * Get starred/favorite contacts using a single query.
+     * Get starred/favorite contacts reactively — re-emits on any contacts change.
      */
-    fun getStarredContacts(): Flow<List<Contact>> = flow {
-        try {
+    fun getStarredContacts(): Flow<List<Contact>> = callbackFlow {
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                trySend(fetchStarredContacts())
+            }
+        }
+        contentResolver.registerContentObserver(
+            ContactsContract.Contacts.CONTENT_URI, true, observer
+        )
+        trySend(fetchStarredContacts())
+        awaitClose { contentResolver.unregisterContentObserver(observer) }
+    }.flowOn(Dispatchers.IO)
+
+    private fun fetchStarredContacts(): List<Contact> {
+        return try {
             val cursor = contentResolver.query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 phoneProjection,
@@ -105,17 +135,15 @@ class ContactRepository @Inject constructor(
                 null,
                 "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME_PRIMARY} ASC"
             )
-
-            val contacts = buildContactsFromPhoneCursor(cursor)
-            emit(contacts)
+            buildContactsFromPhoneCursor(cursor)
         } catch (e: SecurityException) {
             Log.e(TAG, "Permission denied reading starred contacts", e)
-            emit(emptyList())
+            emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error loading starred contacts", e)
-            emit(emptyList())
+            emptyList()
         }
-    }.flowOn(Dispatchers.IO)
+    }
 
     /**
      * Build Contact list from a Phone.CONTENT_URI cursor.

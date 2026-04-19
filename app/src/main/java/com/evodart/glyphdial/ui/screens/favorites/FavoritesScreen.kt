@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,7 +35,8 @@ fun FavoritesScreen(
     onContactClick: (Contact) -> Unit,
     onCallClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    onAddFavoritesClick: () -> Unit = {}
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         if (isLoading) {
@@ -44,26 +46,34 @@ fun FavoritesScreen(
             )
         } else if (contacts.isEmpty()) {
             Column(
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier.align(Alignment.Center).padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "No favorites yet",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = NothingColors.SilverGray
+                    style = MaterialTheme.typography.titleMedium,
+                    color = NothingColors.PureWhite
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Star contacts to add them here",
+                    text = "Star contacts to see them here",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = NothingColors.Gray
+                    color = NothingColors.SilverGray,
+                    textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = onAddFavoritesClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = NothingColors.NothingRed)
+                ) {
+                    Text("Browse contacts", color = NothingColors.PureWhite)
+                }
             }
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -78,6 +88,22 @@ fun FavoritesScreen(
                     )
                 }
             }
+        }
+
+        // FAB — always visible to add more favorites via Contacts tab
+        FloatingActionButton(
+            onClick = onAddFavoritesClick,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 24.dp, bottom = 24.dp),
+            containerColor = NothingColors.NothingRed,
+            contentColor = NothingColors.PureWhite,
+            shape = CircleShape
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Add favorite"
+            )
         }
     }
 }
